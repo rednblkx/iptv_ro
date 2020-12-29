@@ -3,10 +3,17 @@ const app = express()
 const port = 3000;
 const {digi} = require('./digionline');
 const {pro} = require('./protv');
+const fs = require('fs');
 const {live, showid, shows, episode} = require('./antena');
 //AntenaP
 app.use('/live/:channel', live);
-app.use('/shows', shows);
+app.use('/shows',async (req,res) => {
+    try {
+        res.send(await shows());
+    } catch (error) {
+        res.status(505);
+    }
+});
 app.use('/show/play/:show/:epid', episode);
 app.use('/show/:show', showid);
 //DiGiOnline
