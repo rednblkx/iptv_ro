@@ -4,6 +4,7 @@ const { default: axios } = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
 const puppeteer = require("puppeteer");
+const { resolve } = require("path");
 
 // app.listen(3001, ()=> {
 //     console.log('started');
@@ -40,8 +41,6 @@ exports.live = (req, res) => {
 exports.showid = async (req, res) => {
   res.send(await getShow(req.params.show));
 };
-exports.shows = express.static("public");
-
 exports.episode = async (req, res) => {
   try {
     let auth = await getLogin();
@@ -101,6 +100,61 @@ exports.episode = async (req, res) => {
 //     }
 //   }
 // }
+exports.shows = async function getShowsRoute() {
+  return new Promise(async (resolve,reject) => {
+    try {
+      let html = await getShows();
+      let $ = cheerio.load("<html><head><title>Shows</title></head><body></body></html>");
+      $("body").append("<ul></ul>");
+      html.forEach((el) => {
+        $("ul").append(`<img src=${el.img} width=100px>`);
+        $("ul").append(`<li><a href=${el.link}>${el.name}</a></li>`);
+      });
+      resolve($.html());
+    } catch (error) {
+      reject('no elements');
+    }
+  })
+
+}
+async function getShows() {
+  try {
+    let auth = await getLogin();
+    let html = await axios.get(`https://antenaplay.ro/seriale`, {
+      headers: {
+        accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+        "cache-control": "no-cache",
+        pragma: "no-cache",
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1",
+        cookie: auth.join("; "),
+      },
+      referrer: `https://antenaplay.ro/`,
+      referrerPolicy: "no-referrer-when-downgrade",
+      mode: "cors",
+    });
+    let $ = cheerio.load(await html.data);
+    let $$ = cheerio.load(
+      $($(".slider-container")[$(".slider-container").length - 1]).html()
+    );
+    let shows = [];
+    $$($$("a").each((i, el) => shows.push({
+      name: $$(el).children("h5").text(),
+      link: '/show' + $$(el).attr("href"),
+      img: $$(el).children('.container').children("img").attr('src') 
+    })));
+    return new Promise((resolve, reject) => {
+      shows.length !== 0 ? resolve(shows) : reject("No List");
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
 async function fetchLinkShow(
   url,
   year = new Date().getFullYear(),
@@ -121,12 +175,12 @@ async function fetchLinkShow(
         "x-requested-with": "XMLHttpRequest",
         cookie: auth.join("; "),
       },
+      withCredentials: true,
       referrer: "https://antenaplay.ro/",
       referrerPolicy: "no-referrer-when-downgrade",
       mode: "cors",
     });
-    var json = JSON.parse(await response.data);
-    var $ = cheerio.load(json.view);
+    var $ = cheerio.load(response.data.view);
     $("a").each((i, url) => {
       $(url).attr("href", "/show/play" + $(url).attr("href"));
     });
