@@ -19,7 +19,7 @@
 /:channel --> Live feed of a tv channel (see protv.js file)
 ```
 ## Authentication
-Create a file auth.json with the following format and fill in blank with the appropriate values
+Create a file auth.json with the following format and fill in the blanks with the appropriate values
 ```json
 {
   "antena": {
