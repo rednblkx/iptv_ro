@@ -1,13 +1,16 @@
 ## API Endpoints
 ### APlay
 ```
-/live/:channel --> Live feed of a tv channel (see antena.js file)
+/:channel --> Live feed of tv channel (see antena.js file for channel IDs)
 
-/shows --> List of tv shows currently listed statically
+/shows --> List of all the tv shows
 
-/show/play/:showid/:epid --> Play one episode of a show
+/show/:showid --> Year & Month Selector for :showid episodes
 
-/show/:showid/ --> Get show episodes
+/show/:showid?year=:year&month=:month --> Get Episodes from Year :year & Month :month
+
+/show/play/:showid/:epid --> Play episode :epid of a show :showid
+
 ```
 ### DiGi
 ```
