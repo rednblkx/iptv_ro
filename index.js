@@ -6,24 +6,24 @@ const {pro} = require('./protv');
 const fs = require('fs');
 const {live, showid, shows, episode} = require('./antena');
 //AntenaP
-app.use('/live/:channel', live);
-app.use('/shows',async (req,res) => {
+app.get('/:channel', live);
+app.get('/shows',async (req,res) => {
     try {
         res.send(await shows());
     } catch (error) {
         res.status(505);
     }
 });
-app.use('/show/play/:show/:epid', episode);
-app.use('/show/:show', showid);
+app.get('/show/play/:show/:epid', episode);
+app.get('/show/:show', showid);
 //DiGiOnline
-app.use('/:channel\.m3u8', ({next}) => {
+app.get('/:channel\.m3u8', ({next}) => {
     // req.params.channel = req.params.channel.match('(.*).m3u8')[1]
     next();
 })
-app.use('/:channel', digi);
+app.get('/:channel', digi);
 //ProPlus
-app.use('/:channel', pro);
+app.get('/:channel', pro);
 
 app.listen(port, () => console.log(`IPTV-AIO is up and running on port ${port}`))
 

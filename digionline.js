@@ -1,6 +1,6 @@
 const { default: axios } = require("axios");
 const fs = require("fs");
-const puppeteer = require('puppeteer');
+const puppeteer = require("puppeteer");
 const { setTimeout } = require("timers");
 
 var ch = {};
@@ -8,107 +8,226 @@ var ch = {};
 var ch24 = ["digi24", "digisport1", "digisport2", "digisport3", "digisport4"];
 
 var channels = {
-  "kanal-d": { id: 30, category: "general" },
-  "film-cafe": { id: 94, category: "filme" },
-  tnt: { id: 91, category: "filme" },
-  "comedy-central": { id: 58, category: "filme" },
-  "paramount-channel": { id: 111, category: "filme" },
-  "tv-1000": { id: 43, category: "filme" },
-  axn: { id: 44, category: "filme" },
-  amc: { id: 102, category: "filme" },
-  diva: { id: 106, category: "filme" },
-  "epic-drama": { id: 95, category: "filme" },
-  "bollywood-tv": { id: 96, category: "filme" },
-  "axn-black": { id: 45, category: "filme" },
-  "axn-spin": { id: 57, category: "filme" },
-  "axn-white": { id: 46, category: "filme" },
-  cinemaraton: { id: 99, category: "filme" },
-  "comedy-est": { id: 100, category: "filme" },
-  nickelodeon: { id: 28, category: "copii" },
-  "nick-jr": { id: 108, category: "copii" },
-  minimax: { id: 37, category: "copii" },
-  jimjam: { id: 105, category: "copii" },
-  "nick-toons": { id: 109, category: "copii" },
-  "disney-junior": { id: 18, category: "copii" },
-  "disney-channel": { id: 17, category: "copii" },
-  "davinci-learning": { id: 66, category: "copii" },
-  "cartoon-network": { id: 89, category: "copii" },
-  boomerang: { id: 90, category: "copii" },
-  "digi-world": { id: 5, category: "tematice" },
-  "discovery-channel": { id: 71, category: "tematice" },
-  "history-channel": { id: 20, category: "tematice" },
-  "national-geographic": { id: 19, category: "tematice" },
-  tlc: { id: 72, category: "tematice" },
-  "viasat-history": { id: 41, category: "tematice" },
-  "bbc-earth": { id: 67, category: "tematice" },
-  "u-tv": { id: 9, category: "muzica" },
-  vh1: { id: 110, category: "muzica" },
-  "hit-music-channel": { id: 35, category: "muzica" },
-  "kiss-tv": { id: 34, category: "muzica" },
-  "mtv-europe": { id: 104, category: "muzica" },
-  "music-channel": { id: 25, category: "muzica" },
+  "kanal-d": {
+    id: 30,
+    category: "general",
+  },
+  "film-cafe": {
+    id: 94,
+    category: "filme",
+  },
+  tnt: {
+    id: 91,
+    category: "filme",
+  },
+  "comedy-central": {
+    id: 58,
+    category: "filme",
+  },
+  "paramount-channel": {
+    id: 111,
+    category: "filme",
+  },
+  "tv-1000": {
+    id: 43,
+    category: "filme",
+  },
+  axn: {
+    id: 44,
+    category: "filme",
+  },
+  amc: {
+    id: 102,
+    category: "filme",
+  },
+  diva: {
+    id: 106,
+    category: "filme",
+  },
+  "epic-drama": {
+    id: 95,
+    category: "filme",
+  },
+  "bollywood-tv": {
+    id: 96,
+    category: "filme",
+  },
+  "axn-black": {
+    id: 45,
+    category: "filme",
+  },
+  "axn-spin": {
+    id: 57,
+    category: "filme",
+  },
+  "axn-white": {
+    id: 46,
+    category: "filme",
+  },
+  cinemaraton: {
+    id: 99,
+    category: "filme",
+  },
+  "comedy-est": {
+    id: 100,
+    category: "filme",
+  },
+  nickelodeon: {
+    id: 28,
+    category: "copii",
+  },
+  "nick-jr": {
+    id: 108,
+    category: "copii",
+  },
+  minimax: {
+    id: 37,
+    category: "copii",
+  },
+  jimjam: {
+    id: 105,
+    category: "copii",
+  },
+  "nick-toons": {
+    id: 109,
+    category: "copii",
+  },
+  "disney-junior": {
+    id: 18,
+    category: "copii",
+  },
+  "disney-channel": {
+    id: 17,
+    category: "copii",
+  },
+  "davinci-learning": {
+    id: 66,
+    category: "copii",
+  },
+  "cartoon-network": {
+    id: 89,
+    category: "copii",
+  },
+  boomerang: {
+    id: 90,
+    category: "copii",
+  },
+  "digi-world": {
+    id: 5,
+    category: "tematice",
+  },
+  "discovery-channel": {
+    id: 71,
+    category: "tematice",
+  },
+  "history-channel": {
+    id: 20,
+    category: "tematice",
+  },
+  "national-geographic": {
+    id: 19,
+    category: "tematice",
+  },
+  tlc: {
+    id: 72,
+    category: "tematice",
+  },
+  "viasat-history": {
+    id: 41,
+    category: "tematice",
+  },
+  "bbc-earth": {
+    id: 67,
+    category: "tematice",
+  },
+  "u-tv": {
+    id: 9,
+    category: "muzica",
+  },
+  vh1: {
+    id: 110,
+    category: "muzica",
+  },
+  "hit-music-channel": {
+    id: 35,
+    category: "muzica",
+  },
+  "kiss-tv": {
+    id: 34,
+    category: "muzica",
+  },
+  "mtv-europe": {
+    id: 104,
+    category: "muzica",
+  },
+  "music-channel": {
+    id: 25,
+    category: "muzica",
+  },
 };
 async function getLogin() {
-  let cookies = JSON.parse(fs.readFileSync("./auth.json").toString()).digi.cookies;
+  let cookies = JSON.parse(fs.readFileSync("./auth.json").toString()).digi
+    .cookies;
+  return new Promise(async (resolve) => {
     try {
-        return new Promise(async (resolve) => {
-            if (cookies) {
-              resolve(cookies);
-            } else if (!cookies) {
-              if ((await login()) === 1) {
-                resolve(
-                  JSON.parse(fs.readFileSync("./auth.json").toString()).digi.cookies
-                );
-              }
-            }
-          });
+      if (cookies) {
+        resolve(cookies);
+      } else if (!cookies) {
+        resolve(await login());
+      }
     } catch (error) {
-        console.error(error);
+      reject("getLogin: " + error);
+      console.error(error);
     }
+  });
 }
 async function login() {
-  let auth = JSON.parse(fs.readFileSync("./auth.json").toString());
-  let browser = await puppeteer.launch({headless: false});
-  let page = await browser.newPage();
-  await page.goto('https://www.digionline.ro/auth/login', {waitUntil: 'domcontentloaded'});
-  await page.type('#form-login-email', auth.digi.username);
-  await page.type('#form-login-password', auth.digi.password);
-  await page.evaluate("document.querySelector('button[type=submit]').click()");
-  await page.waitForSelector('.login-step.login-step-4');
-  (await page.cookies())
-    .map((b) =>
-      [
-        "cmp_level",
-        "deviceId",
-        "DOSESSV3PRI",
+  return new Promise(async (resolve, reject) => {
+    try {
+      let auth = JSON.parse(fs.readFileSync("./auth.json").toString());
+      let browser = await puppeteer.launch({ headless: false });
+      let page = await browser.newPage();
+      await page.goto("https://www.digionline.ro/auth/login", {
+        waitUntil: "domcontentloaded",
+      });
+      await page.type("#form-login-email", auth.digi.username);
+      await page.type("#form-login-password", auth.digi.password);
+      await page.evaluate(
+        "document.querySelector('button[type=submit]').click()"
+      );
+      await page.waitForSelector(".login-step.login-step-4");
+      (await page.cookies())
+        .map((b) =>
+          ["cmp_level", "deviceId", "DOSESSV3PRI"].includes(b.name) ? b : null
+        )
+        .filter(function (el) {
+          return el != null;
+        })
+        .forEach(
+          (el, index, array) =>
+            (auth.digi.cookies = array.map((n) =>
+              new Cookie(n.name, n.value).toString()
+            ))
+        );
+      fs.writeFileSync("./auth.json", JSON.stringify(auth));
 
-      ].includes(b.name)
-        ? b
-        : null
-    )
-    .filter(function (el) {
-      return el != null;
-    })
-    .forEach(
-      (el, index, array) =>
-        (auth.digi.cookies = array.map((n) =>
-          new Cookie(n.name, n.value).toString()
-        ))
-    );
-  fs.writeFileSync("./auth.json", JSON.stringify(auth));
-  return new Promise((resolve, reject) => {
-    if (auth.digi.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))) {
+      if (
+        auth.digi.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))
+      ) {
         resolve(auth.digi.cookies);
       } else {
         reject("Something went wrong while signing in");
       }
+    } catch (error) {
+      reject("login: " + error);
+      console.error(error);
+    }
   });
 }
-async function getFromDigi(id, name, category, callback) {
+async function getFromDigi(id, name, category) {
   try {
     let auth = await getLogin();
-    axios
-    .post(
+    return axios.post(
       "https://www.digionline.ro/api/stream",
       `id_stream=${id}&quality=hq`,
       {
@@ -128,23 +247,23 @@ async function getFromDigi(id, name, category, callback) {
           "sec-fetch-dest": "empty",
           referer: `https:/www.digionline.ro/${category}/${name}`,
           "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-          cookie:
-            auth.join('; ')
+          cookie: auth.join("; "),
         },
       }
-    )
-    .then((stream) => {
-      setTimeout(() => {delete channels[req.params.channel]}, 2.16e+7)
-      stream.data.stream_url ? callback(stream.data.stream_url) : callback(0);
-    });
+    );
+    // .then((stream) => {
+    // setTimeout(() => { delete channels[req.params.channel] }, 2.16e+7)
+    // stream.data.stream_url ? callback(stream.data.stream_url) : callback(0);
+    // });
   } catch (error) {
-   console.error(error); 
+    console.error(error);
   }
 }
 
-function getFrom24(scope, callback) {
-  axios
-    .get("https://balancer2.digi24.ro/streamer/make_key.php", {
+async function getFrom24(scope) {
+  let key = await axios.get(
+    "https://balancer2.digi24.ro/streamer/make_key.php",
+    {
       headers: {
         accept: "*/*",
         "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
@@ -156,20 +275,15 @@ function getFrom24(scope, callback) {
         referrer: "https://www.digi24.ro/",
         referrerPolicy: "origin-when-cross-origin",
       },
-    })
-    .then((key) => {
-      axios
-        .get(
-          `https://balancer2.digi24.ro/streamer.php?&scope=${scope}&key=${
-            key.data
-          }&outputFormat=json&type=hq&quality=hq&is=4&ns=${scope}&pe=site&s=site&sn=${
-            scope.includes("sport") ? "digisport.ro" : "digi24.ro"
-          }&p=browser&pd=linux`
-        )
-        .then((res) => {
-          res.data.file ? callback(res.data.file) : callback(0);
-        });
-    });
+    }
+  );
+  return axios.get(
+    `https://balancer2.digi24.ro/streamer.php?&scope=${scope}&key=${
+      key.data
+    }&outputFormat=json&type=hq&quality=hq&is=4&ns=${scope}&pe=site&s=site&sn=${
+      scope.includes("sport") ? "digisport.ro" : "digi24.ro"
+    }&p=browser&pd=linux`
+  );
 }
 function m3uParse(data) {
   let line;
@@ -200,72 +314,64 @@ function m3uFixURL(m3u, url) {
   });
   return m3u.join("\n");
 }
-exports.digi = (req, res, next) => {
+exports.digi = async (req, res, next) => {
   if (req.params.channel.match("(.*).m3u8"))
     req.params.channel = req.params.channel.match("(.*).m3u8")[1];
+
   if (channels[req.params.channel]) {
     if (ch[req.params.channel]) {
-      axios.get(ch[req.params.channel]).then((final) => {
-        // res.download('streams/kanald.strm');
-        // res.set("Content-Type", "application/vnd.apple.mpegurl");
-        res.send(
-          m3uFixURL(
-            final.data,
-            ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
-          )
-        );
-      });
+      let m3u8 = await axios.get(ch[req.params.channel]);
+      // res.download('streams/kanald.strm');
+      // res.set("Content-Type", "application/vnd.apple.mpegurl");
+      res.send(
+        m3uFixURL(
+          m3u8.data,
+          ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
+        )
+      );
     } else {
-      getFromDigi(
+      let url = await getFromDigi(
         channels[req.params.channel].id,
         req.params.channel,
-        channels[req.params.channel].category,
-        (url) => {
-          // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-          // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
-          // url != 0 ? res.redirect(url) : res.status(404)
-          axios.get(url).then((full) => {
-            ch[req.params.channel] =
-              full.config.url.match("(.*)/(.*).m3u8")[1] +
-              "/" +
-              m3uParse(full.data);
-            axios
-              .get(
-                full.config.url.match("(.*)/(.*).m3u8")[1] +
-                  "/" +
-                  m3uParse(full.data)
-              )
-              .then((final) => {
-                // res.set("Content-Type", "application/vnd.apple.mpegurl");
-                res.send(
-                  m3uFixURL(
-                    final.data,
-                    (
-                      full.config.url.match("(.*)/(.*).m3u8")[1] +
-                      "/" +
-                      m3uParse(full.data)
-                    ).match("(.*)/(.*).m3u8")[1] + "/"
-                  )
-                );
-              });
-          });
-        }
+        channels[req.params.channel].category
+      );
+      // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+      // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
+      // url != 0 ? res.redirect(url) : res.status(404)
+      let m3u8 = await axios.get(url.data.stream_url);
+      ch[req.params.channel] =
+        m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data);
+      let m3u8_fix = await axios.get(
+        m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data)
+      );
+      // res.set("Content-Type", "application/vnd.apple.mpegurl");
+      res.send(
+        m3uFixURL(
+          m3u8_fix.data,
+          (
+            m3u8.config.url.match("(.*)/(.*).m3u8")[1] +
+            "/" +
+            m3uParse(m3u8.data)
+          ).match("(.*)/(.*).m3u8")[1] + "/"
+        )
       );
     }
   } else if (ch24.includes(req.params.channel)) {
     if (ch[req.params.channel]) {
-      axios.get(ch[req.params.channel]).then((final) => {
-        res.send(
-          m3uFixURL(
-            final.data,
-            ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
-          )
-        );
-      });
+      let c24 = await axios.get(ch[req.params.channel]);
+      res.send(
+        m3uFixURL(
+          c24.data,
+          ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
+        )
+      );
     } else {
-      getFrom24(req.params.channel, (play) => {
-        play != 0 ? res.redirect(play) : res.status(404);
-      });
+      try {
+        let video = await getFrom24(req.params.channel);
+        res.redirect(video.data.file);
+      } catch (error) {
+        res.status(500).send(error);
+      }
     }
   } else next();
 };
