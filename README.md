@@ -22,23 +22,7 @@
 /:channel --> Live feed of a tv channel (see protv.js file)
 ```
 ## Authentication
-Create a file auth.json with the following format and fill in the blanks with the appropriate values
-```json
-{
-  "antena": {
-    "username": "",
-    "password": ""
-  },
-  "digi": {
-    "username": "",
-    "password": ""
-  },
-  "pro": {
-    "username": "",
-    "password": ""
-  }
-}
 
-```
+Access /login and fill accordingly
 
 This project is licensed under the terms of the MIT license.
