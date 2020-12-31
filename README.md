@@ -40,3 +40,5 @@ Create a file auth.json with the following format and fill in the blanks with th
 }
 
 ```
+
+This project is licensed under the terms of the MIT license.
