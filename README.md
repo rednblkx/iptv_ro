@@ -27,15 +27,15 @@ Create a file auth.json with the following format and fill in the blanks with th
 {
   "antena": {
     "username": "",
-    "password": "",
+    "password": ""
   },
   "digi": {
     "username": "",
-    "password": "",
+    "password": ""
   },
   "pro": {
     "username": "",
-    "password": "",
+    "password": ""
   }
 }
 
