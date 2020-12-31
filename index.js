@@ -3,8 +3,34 @@ const app = express()
 const port = 3000;
 const {digi} = require('./digionline');
 const {pro} = require('./protv');
-const fs = require('fs');
+const fs = require('fs')
 const {live, showid, shows, episode} = require('./antena');
+const path = require('path')
+app.get('/login', (req,res) => {
+    res.sendFile(path.join(__dirname, './public', 'login.html'))
+})
+app.post('/login',express.urlencoded(), (req,res) => {
+    var file;
+    try {
+        file = fs.readFileSync('./auth.json').toString() && JSON.parse(fs.readFileSync('./auth.json').toString());
+    } catch (error) {
+        fs.writeFileSync('./auth.json', `{"${req.body.provider}": {}}`);
+        file = JSON.parse(fs.readFileSync('./auth.json').toString())
+    }
+    try {
+        file[req.body.provider] = {};
+        // res.setHeader("Content-Type", "application/json")
+        if(['antena', 'pro', 'digi'].includes(req.body.provider)){
+            file[req.body.provider].username = req.body.username;
+            file[req.body.provider].password = req.body.password;
+            fs.writeFile("./auth.json", JSON.stringify(file), () => {
+                res.send('Success!')
+            })
+        }else res.send('Invalid Provider ID!')
+    } catch (error) {
+        res.status(500).send(`${error}`)
+    }
+})
 //AntenaP
 app.get('/:channel', live);
 app.get('/shows',async (req,res) => {
