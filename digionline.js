@@ -3,6 +3,8 @@ const fs = require("fs");
 const puppeteer = require("puppeteer");
 const { setTimeout } = require("timers");
 
+let consoleL = false;
+
 var ch = {};
 
 var ch24 = ["digi24", "digisport1", "digisport2", "digisport3", "digisport4"];
@@ -166,18 +168,19 @@ var channels = {
   },
 };
 async function getLogin() {
-  let cookies = JSON.parse(fs.readFileSync("./auth.json").toString()).digi
-    .cookies;
-  return new Promise(async (resolve) => {
+  return new Promise(async (resolve, reject) => {
     try {
-      if (cookies) {
-        resolve(cookies);
-      } else if (!cookies) {
+      let auth = JSON.parse(fs.readFileSync("./auth.json").toString()).digi;
+      if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "digi: No Credentials"
+      if (auth.cookies) {
+        resolve(auth.cookies);
+      } else if (!auth.cookies) {
         resolve(await login());
       }
     } catch (error) {
       reject("getLogin: " + error);
-      console.error(error);
+      if(consoleL)
+        console.error(error);
     }
   });
 }
@@ -220,44 +223,50 @@ async function login() {
       }
     } catch (error) {
       reject("login: " + error);
-      console.error(error);
+      if(consoleL)
+        console.error(error);
     }
   });
 }
 async function getFromDigi(id, name, category) {
-  try {
-    let auth = await getLogin();
-    return axios.post(
-      "https://www.digionline.ro/api/stream",
-      `id_stream=${id}&quality=hq`,
-      {
-        headers: {
-          authority: "www.digionline.ro",
-          pragma: "no-cache",
-          "cache-control": "no-cache",
-          accept: "application/json, text/javascript, */*; q=0.01",
-          dnt: "1",
-          "x-requested-with": "XMLHttpRequest",
-          "user-agent":
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36",
-          "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-          origin: "https:/www.digionline.ro",
-          "sec-fetch-site": "same-origin",
-          "sec-fetch-mode": "cors",
-          "sec-fetch-dest": "empty",
-          referer: `https:/www.digionline.ro/${category}/${name}`,
-          "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-          cookie: auth.join("; "),
-        },
-      }
-    );
-    // .then((stream) => {
-    // setTimeout(() => { delete channels[req.params.channel] }, 2.16e+7)
-    // stream.data.stream_url ? callback(stream.data.stream_url) : callback(0);
-    // });
-  } catch (error) {
-    console.error(error);
-  }
+  return new Promise(async (resolve, reject) => {
+    try {
+      let auth = await getLogin();
+      let play = await axios.post(
+        "https://www.digionline.ro/api/stream",
+        `id_stream=${id}&quality=hq`,
+        {
+          headers: {
+            authority: "www.digionline.ro",
+            pragma: "no-cache",
+            "cache-control": "no-cache",
+            accept: "application/json, text/javascript, */*; q=0.01",
+            dnt: "1",
+            "x-requested-with": "XMLHttpRequest",
+            "user-agent":
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36",
+            "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+            origin: "https:/www.digionline.ro",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            referer: `https:/www.digionline.ro/${category}/${name}`,
+            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+            cookie: auth.join("; "),
+          },
+        }
+      );
+      resolve(play);
+      // .then((stream) => {
+      // setTimeout(() => { delete channels[req.params.channel] }, 2.16e+7)
+      // stream.data.stream_url ? callback(stream.data.stream_url) : callback(0);
+      // });
+    } catch (error) {
+      reject(error);
+      if(consoleL)
+        console.error(error);
+    }
+  })
 }
 
 async function getFrom24(scope) {
@@ -315,63 +324,67 @@ function m3uFixURL(m3u, url) {
   return m3u.join("\n");
 }
 exports.digi = async (req, res, next) => {
-  if (req.params.channel.match("(.*).m3u8"))
+  try {
+    if (req.params.channel.match("(.*).m3u8"))
     req.params.channel = req.params.channel.match("(.*).m3u8")[1];
 
-  if (channels[req.params.channel]) {
-    if (ch[req.params.channel]) {
-      let m3u8 = await axios.get(ch[req.params.channel]);
-      // res.download('streams/kanald.strm');
-      // res.set("Content-Type", "application/vnd.apple.mpegurl");
-      res.send(
-        m3uFixURL(
-          m3u8.data,
-          ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
-        )
-      );
-    } else {
-      let url = await getFromDigi(
-        channels[req.params.channel].id,
-        req.params.channel,
-        channels[req.params.channel].category
-      );
-      // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-      // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
-      // url != 0 ? res.redirect(url) : res.status(404)
-      let m3u8 = await axios.get(url.data.stream_url);
-      ch[req.params.channel] =
-        m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data);
-      let m3u8_fix = await axios.get(
-        m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data)
-      );
-      // res.set("Content-Type", "application/vnd.apple.mpegurl");
-      res.send(
-        m3uFixURL(
-          m3u8_fix.data,
-          (
-            m3u8.config.url.match("(.*)/(.*).m3u8")[1] +
-            "/" +
-            m3uParse(m3u8.data)
-          ).match("(.*)/(.*).m3u8")[1] + "/"
-        )
-      );
-    }
-  } else if (ch24.includes(req.params.channel)) {
-    if (ch[req.params.channel]) {
-      let c24 = await axios.get(ch[req.params.channel]);
-      res.send(
-        m3uFixURL(
-          c24.data,
-          ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
-        )
-      );
-    } else {
-      try {
-        let video = await getFrom24(req.params.channel);
-        res.redirect(video.data.file);
-      } catch (error) {
-        res.status(500).send(error);
+    if (channels[req.params.channel]) {
+      if (ch[req.params.channel]) {
+        let m3u8 = await axios.get(ch[req.params.channel]);
+        // res.download('streams/kanald.strm');
+        // res.set("Content-Type", "application/vnd.apple.mpegurl");
+        res.send(
+          m3uFixURL(
+            m3u8.data,
+            ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
+          )
+        );
+      } else {
+        let url = await getFromDigi(
+          channels[req.params.channel].id,
+          req.params.channel,
+          channels[req.params.channel].category
+        );
+        // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+        // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
+        // url != 0 ? res.redirect(url) : res.status(404)
+        let m3u8 = await axios.get(url.data.stream_url);
+        ch[req.params.channel] =
+          m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data);
+        let m3u8_fix = await axios.get(
+          m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data)
+        );
+        // res.set("Content-Type", "application/vnd.apple.mpegurl");
+        res.send(
+          m3uFixURL(
+            m3u8_fix.data,
+            (
+              m3u8.config.url.match("(.*)/(.*).m3u8")[1] +
+              "/" +
+              m3uParse(m3u8.data)
+            ).match("(.*)/(.*).m3u8")[1] + "/"
+          )
+        );
       }
-    }
-  } else next();
+    } else if (ch24.includes(req.params.channel)) {
+      if (ch[req.params.channel]) {
+        let c24 = await axios.get(ch[req.params.channel]);
+        res.send(
+          m3uFixURL(
+            c24.data,
+            ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
+          )
+        );
+      } else {
+        try {
+          let video = await getFrom24(req.params.channel);
+          res.redirect(video.data.file);
+        } catch (error) {
+          res.status(500).send(error);
+        }
+      }
+    } else next();
+  } catch (error) {
+    res.status(500).send(error);
+  }
 };

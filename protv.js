@@ -71,11 +71,11 @@ async function login() {
 async function getLogin() {
     return new Promise(async (resolve, reject) => {
         try {
-            let cookies = JSON.parse(fs.readFileSync("./auth.json").toString()).pro.cookies;
-            let bearer = JSON.parse(fs.readFileSync("./auth.json").toString()).pro.bearer;
-            if (cookies && bearer) {
-                resolve({cookie: cookies, bearer: bearer});
-            } else if (! cookies || ! bearer) {
+            let auth = JSON.parse(fs.readFileSync("./auth.json").toString()).pro;
+            if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "pro: No Credentials"
+            if (auth.cookies && auth.bearer) {
+                resolve({cookie: auth.cookies, bearer: auth.bearer});
+            } else if (! auth.cookies || ! auth.bearer) {
                 login().then((token) => {
                     resolve({cookie: token.cookie, bearer: token.bearer});
                 }).catch((reason) => reject(reason));
