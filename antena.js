@@ -12,6 +12,7 @@ channels = [
   "antena-international",
 ];
 var stream = {};
+let consoleL = false;
 function Cookie(name, value) {
   this.name = name;
   this.value = value;
@@ -78,9 +79,10 @@ exports.shows = async function getShowsRoute() {
 
 }
 async function getEpisode(show, epid) {
+  return new Promise(async (resolve, reject) => {
   try {
     if(!show || !epid){
-      throw "Params Missing"
+      throw "getEpisode: Params Missing"
     }
     let auth = await getLogin();
     let response = await axios.get(
@@ -103,7 +105,7 @@ async function getEpisode(show, epid) {
         mode: "cors",
       }
     );
-    return axios
+    let link = await axios
       .get(
         "https:" +
         cheerio.load(response.data)(".video-container script")
@@ -123,9 +125,13 @@ async function getEpisode(show, epid) {
           },
         }
       );
+      resolve(link)
   } catch (error) {
-    console.error(error);
+    reject(error);
+    if(consoleL)
+      console.error(error);
   }
+})
 }
 async function getShows() {
   return new Promise(async (resolve, reject) => {
@@ -162,7 +168,8 @@ async function getShows() {
       shows.length !== 0 ? resolve(shows) : reject("getShows: No List");
     } catch (error) {
       reject("getShows: " + error);
-      console.error(error);
+      if(consoleL)
+        console.error(error);
     }
   });
 }
@@ -200,7 +207,8 @@ async function fetchLinkShow(
       $ ? resolve($.html()) : reject('fetchLinkShow: No JSON')
     } catch (error) {
       reject("fetchLinkShow: " + error);
-      console.error(error);
+      if(consoleL)
+        console.error(error);
     }
   });
 }
@@ -251,24 +259,26 @@ async function getShow(show, year, month) {
       )) : reject('getShow: No HTML')
     } catch (error) {
       reject("getShow: " + error);
-      console.error(error);
+      if(consoleL)
+        console.error(error);
     }
   })
 }
 async function getLogin() {
-  let cookies = JSON.parse(fs.readFileSync("./auth.json").toString()).antena
-    .cookies;
-    return new Promise(async (resolve) => {
-      try {
-        if (cookies) {
-          resolve(cookies);
-        } else if (!cookies) {
-          resolve(await login());
-        }
-      } catch (error) {
-        reject("getLogin: " + error);
-        console.error(error);
+  return new Promise(async (resolve, reject) => {
+    try {
+      let auth = JSON.parse(fs.readFileSync("./auth.json").toString()).antena;
+      if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "antena: No Credentials"
+      if (auth.cookies) {
+        resolve(auth.cookies);
+      } else if (!auth.cookies) {
+        resolve(await login());
       }
+    } catch (error) {
+      reject("getLogin: " + error);
+      if(consoleL)
+        console.error(error);
+    }
   });
 }
 
@@ -321,8 +331,9 @@ async function getStream(channel) {
             .match('"(.*)"')[1]
         ): reject("getStream: HTML not available");
       } catch (error) {
-        reject("geStream: " + error);
-        console.error(error);
+        reject("getStream: " + error);
+        if(consoleL)
+          console.error(error);
     }
   });
 }
@@ -377,7 +388,8 @@ async function login() {
       }
     } catch (error) {
       reject("login: " + error);
-      console.error(error);
+      if(consoleL)
+        console.error(error);
     }
   });
 }
