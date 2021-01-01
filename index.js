@@ -9,7 +9,7 @@ const path = require('path')
 app.get('/login', (req,res) => {
     res.sendFile(path.join(__dirname, './public', 'login.html'))
 })
-app.post('/login',express.urlencoded(), (req,res) => {
+app.post('/login',express.urlencoded({extended: false}), (req,res) => {
     var file;
     try {
         file = fs.readFileSync('./auth.json').toString() && JSON.parse(fs.readFileSync('./auth.json').toString());

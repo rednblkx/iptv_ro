@@ -1,7 +1,6 @@
 const { default: axios } = require("axios");
 const fs = require("fs");
 const puppeteer = require("puppeteer");
-const { setTimeout } = require("timers");
 
 let consoleL = false;
 
@@ -170,15 +169,19 @@ var channels = {
 async function getLogin() {
   return new Promise(async (resolve, reject) => {
     try {
+      if(consoleL) console.log("digi| getLogin: get auth.json");
       let auth = JSON.parse(fs.readFileSync("./auth.json").toString()).digi;
+      if(consoleL) console.log("digi| getLogin: auth.json valid");
       if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "digi: No Credentials"
       if (auth.cookies) {
+        if(consoleL) console.log("digi| getLogin: got cookies");
         resolve(auth.cookies);
       } else if (!auth.cookies) {
+        if(consoleL) console.log("digi| getLogin: trying login");
         resolve(await login());
       }
     } catch (error) {
-      reject("getLogin: " + error);
+      reject("digi| getLogin: " + error);
       if(consoleL)
         console.error(error);
     }
@@ -187,9 +190,14 @@ async function getLogin() {
 async function login() {
   return new Promise(async (resolve, reject) => {
     try {
+      if(consoleL) console.log("digi| login: getting auth.json");
       let auth = JSON.parse(fs.readFileSync("./auth.json").toString());
-      let browser = await puppeteer.launch({ headless: false });
+      if(consoleL) console.log("digi| login: auth.json valid");
+      if(consoleL) console.log("digi| login: launching browser");
+      let browser = await puppeteer.launch({ headless: true });
+      if(consoleL && browser) console.log("digi| login: browser launched");
       let page = await browser.newPage();
+      if(consoleL && page) console.log("digi| login: new page");
       await page.goto("https://www.digionline.ro/auth/login", {
         waitUntil: "domcontentloaded",
       });
@@ -213,16 +221,17 @@ async function login() {
             ))
         );
       fs.writeFileSync("./auth.json", JSON.stringify(auth));
-
+      
       if (
         auth.digi.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))
       ) {
+      if(consoleL) console.log("digi| login: cookies found");
         resolve(auth.digi.cookies);
       } else {
         reject("Something went wrong while signing in");
       }
     } catch (error) {
-      reject("login: " + error);
+      reject("digi| login: " + error);
       if(consoleL)
         console.error(error);
     }
@@ -231,7 +240,10 @@ async function login() {
 async function getFromDigi(id, name, category) {
   return new Promise(async (resolve, reject) => {
     try {
+      if(consoleL) console.log("digi| getFromDigi: getting cookies");
       let auth = await getLogin();
+      if(consoleL && auth) console.log("digi| getFromDigi: got cookies");
+      if(consoleL) console.log("digi| getFromDigi: getting the stream");
       let play = await axios.post(
         "https://www.digionline.ro/api/stream",
         `id_stream=${id}&quality=hq`,
@@ -256,6 +268,7 @@ async function getFromDigi(id, name, category) {
           },
         }
       );
+      if(consoleL && play) console.log("digi| getFromDigi: got the stream");
       resolve(play);
       // .then((stream) => {
       // setTimeout(() => { delete channels[req.params.channel] }, 2.16e+7)
@@ -270,6 +283,7 @@ async function getFromDigi(id, name, category) {
 }
 
 async function getFrom24(scope) {
+  if(consoleL) console.log("digi| getFrom24: getting balancer key");
   let key = await axios.get(
     "https://balancer2.digi24.ro/streamer/make_key.php",
     {
@@ -286,6 +300,7 @@ async function getFrom24(scope) {
       },
     }
   );
+  if(consoleL && key) console.log("digi| getFrom24: got key");
   return axios.get(
     `https://balancer2.digi24.ro/streamer.php?&scope=${scope}&key=${
       key.data
@@ -326,13 +341,16 @@ function m3uFixURL(m3u, url) {
 exports.digi = async (req, res, next) => {
   try {
     if (req.params.channel.match("(.*).m3u8"))
-    req.params.channel = req.params.channel.match("(.*).m3u8")[1];
+      req.params.channel = req.params.channel.match("(.*).m3u8")[1];
 
     if (channels[req.params.channel]) {
       if (ch[req.params.channel]) {
+        if(consoleL) console.log("digi| digi: using cache");
+        if(consoleL) console.log(`digi| digi: ${ch[req.params.channel]}`);
         let m3u8 = await axios.get(ch[req.params.channel]);
         // res.download('streams/kanald.strm');
         // res.set("Content-Type", "application/vnd.apple.mpegurl");
+        if(consoleL && m3u8) console.log(`digi| digi: using URL ${m3uFixURL(m3u8.data,ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/")}`);
         res.send(
           m3uFixURL(
             m3u8.data,
@@ -340,20 +358,25 @@ exports.digi = async (req, res, next) => {
           )
         );
       } else {
+        if(consoleL) console.log("digi| digi: getting from digi");
         let url = await getFromDigi(
           channels[req.params.channel].id,
           req.params.channel,
           channels[req.params.channel].category
         );
+        if(consoleL && url.data) console.log("digi| digi: got response");
+        if(consoleL && url.data) console.log(`digi| digi: ${JSON.stringify(url.data)}`);
         // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
         // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
         // url != 0 ? res.redirect(url) : res.status(404)
         let m3u8 = await axios.get(url.data.stream_url);
+        if(consoleL && m3u8.data) console.log(`digi| digi: Original M3U8 ${m3u8.data}`);
         ch[req.params.channel] =
           m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data);
         let m3u8_fix = await axios.get(
           m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data)
         );
+        if(consoleL && m3u8_fix.data) console.log(`digi| digi: HD M3U8 ${m3u8_fix.data}`);
         // res.set("Content-Type", "application/vnd.apple.mpegurl");
         res.send(
           m3uFixURL(
@@ -365,10 +388,14 @@ exports.digi = async (req, res, next) => {
             ).match("(.*)/(.*).m3u8")[1] + "/"
           )
         );
+        if(consoleL) console.log(`digi| digi: Rewrited URL ${m3uFixURL(m3u8_fix.data, (m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data)).match("(.*)/(.*).m3u8")[1] + "/")}`);
       }
     } else if (ch24.includes(req.params.channel)) {
       if (ch[req.params.channel]) {
+        if(consoleL) console.log("digi| digi: using cache");
         let c24 = await axios.get(ch[req.params.channel]);
+        if(consoleL) console.log(`digi| digi: original URL ${c24.data}`);
+        if(consoleL) console.log(`digi| digi: rewrited URL ${m3uFixURL(c24.data, ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/")}`);
         res.send(
           m3uFixURL(
             c24.data,
@@ -377,7 +404,10 @@ exports.digi = async (req, res, next) => {
         );
       } else {
         try {
+          if(consoleL) console.log(`digi| digi: get from 24`);
           let video = await getFrom24(req.params.channel);
+          if(consoleL && video.data) console.log(`digi| digi: got response`);
+          if(consoleL && video.data) console.log(`digi| digi: ${JSON.stringify(video.data)}`);
           res.redirect(video.data.file);
         } catch (error) {
           res.status(500).send(error);
