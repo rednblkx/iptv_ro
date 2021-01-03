@@ -310,7 +310,7 @@ async function getFrom24(scope) {
     }&p=browser&pd=linux`
   );
 }
-function m3uParse(data) {
+function m3uParse(data, quality) {
   let line;
   var m3u = data.split("\n").filter(function (str) {
     return str.length > 0;
@@ -318,7 +318,7 @@ function m3uParse(data) {
   while ((line = m3u.shift())) {
     if (
       line.startsWith("http") ||
-      (line.endsWith(".m3u8") && (line.includes("hd") || line.includes("hq")))
+      (line.endsWith(".m3u8") && (line.includes(['hq','lq','mq'].includes(quality) ? quality : "hq")))
     ) {
       return line;
     }
@@ -345,19 +345,55 @@ exports.digi = async (req, res, next) => {
       req.params.channel = req.params.channel.match("(.*).m3u8")[1];
 
     if (channels[req.params.channel]) {
-      if (ch[req.params.channel]) {
-        if(consoleL) console.log("digi| digi: using cache");
-        if(consoleL) console.log(`digi| digi: ${ch[req.params.channel]}`);
-        let m3u8 = await axios.get(ch[req.params.channel]);
-        // res.download('streams/kanald.strm');
-        // res.set("Content-Type", "application/vnd.apple.mpegurl");
-        if(consoleL && m3u8) console.log(`digi| digi: using URL ${m3uFixURL(m3u8.data,ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/")}`);
-        res.send(
-          m3uFixURL(
-            m3u8.data,
-            ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
-          )
-        );
+      if (ch[req.params.channel] && req.query.ts === '1') {
+        if(req.query.quality){
+          let url = ch[req.params.channel].match(req.query.quality) != null ? ch[req.params.channel] : await getFromDigi(
+            channels[req.params.channel].id,
+            req.params.channel,
+            channels[req.params.channel].category
+          );
+          let m3u8 = await axios.get(url.data ? url.data.stream_url : url);
+          let quality = url.data ? await axios.get((url.data ? url.data.stream_url : url).match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality)) : undefined;
+          res.set("Content-Type", "application/vnd.apple.mpegurl");
+          res.send(m3uFixURL(
+            url.data ? quality.data : m3u8.data,
+            url.data ?
+            (
+              (url.data ? url.data.stream_url : url).match("(.*)/(.*).m3u8")[1] +
+              "/" +
+              m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq")
+            ).match("(.*)/(.*).m3u8")[1] + "/" : url.match("(.*)/(.*).m3u8")[1] + '/'
+          ));
+        }else{
+          if(consoleL) console.log("digi| digi: using cache with MPEGTS playlist");
+          if(consoleL) console.log(`digi| digi: ${ch[req.params.channel]}`);
+          let m3u8 = await axios.get(ch[req.params.channel]);
+          // res.download('streams/kanald.strm');
+          res.set("Content-Type", "application/vnd.apple.mpegurl");
+          if(consoleL && m3u8.data) console.log(`digi| digi: cached original URL ${m3u8.data}`);
+          if(consoleL && m3u8.data) console.log(`digi| digi: rewrited URL ${m3uFixURL(m3u8.data,ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/")}`);
+          res.send(
+            m3uFixURL(
+              m3u8.data,
+              ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
+            )
+          );
+        }
+      }else if (ch[req.params.channel] && (!req.query.ts || req.query.ts === '0')) {
+        if(req.query.quality){
+          let url = await getFromDigi(
+            channels[req.params.channel].id,
+            req.params.channel,
+            channels[req.params.channel].category
+          );
+          let m3u8 = await axios.get(url.data.stream_url);
+          res.redirect(url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality))
+        }else{
+          if(consoleL) console.log("digi| digi: using cache without MPEGTS playlist");
+          if(consoleL) console.log(`digi| digi: ${ch[req.params.channel]}`);
+          if(consoleL) console.log(`digi| digi: cached original URL ${ch[req.params.channel]}`);
+          res.redirect(ch[req.params.channel]);
+        }
       } else {
         if(consoleL) console.log("digi| digi: getting from digi");
         let url = await getFromDigi(
@@ -370,26 +406,31 @@ exports.digi = async (req, res, next) => {
         // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
         // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
         // url != 0 ? res.redirect(url) : res.status(404)
-        let m3u8 = await axios.get(url.data.stream_url);
-        if(consoleL && m3u8.data) console.log(`digi| digi: Original M3U8 ${m3u8.data}`);
-        ch[req.params.channel] =
-          m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data);
-        let m3u8_fix = await axios.get(
-          m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data)
-        );
-        if(consoleL && m3u8_fix.data) console.log(`digi| digi: HD M3U8 ${m3u8_fix.data}`);
-        // res.set("Content-Type", "application/vnd.apple.mpegurl");
-        res.send(
-          m3uFixURL(
-            m3u8_fix.data,
-            (
-              m3u8.config.url.match("(.*)/(.*).m3u8")[1] +
-              "/" +
-              m3uParse(m3u8.data)
-            ).match("(.*)/(.*).m3u8")[1] + "/"
-          )
-        );
-        if(consoleL) console.log(`digi| digi: Rewrited URL ${m3uFixURL(m3u8_fix.data, (m3u8.config.url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data)).match("(.*)/(.*).m3u8")[1] + "/")}`);
+        if(req.query.ts == '1'){
+          let m3u8 = await axios.get(url.data.stream_url);
+          if(consoleL && m3u8.data) console.log(`digi| digi: Original M3U8 ${m3u8.data}`);
+          ch[req.params.channel] =
+            url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq");
+          let m3u8_quality = await axios.get(
+            url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq")
+          );
+          if(consoleL && m3u8_quality.data) console.log(`digi| digi: Selected Quality M3U8 ${m3u8_quality.data}`);
+          res.set("Content-Type", "application/vnd.apple.mpegurl");
+          res.send(
+            m3uFixURL(
+              m3u8_quality.data,
+              (
+                url.data.stream_url.match("(.*)/(.*).m3u8")[1] +
+                "/" +
+                m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq")
+              ).match("(.*)/(.*).m3u8")[1] + "/"
+            )
+          );
+          if(consoleL) console.log(`digi| digi: Rewrited URL ${m3uFixURL(m3u8_quality.data, (url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data)).match("(.*)/(.*).m3u8")[1] + "/")}`);
+        }else if(req.query.quality){
+          let m3u8 = await axios.get(url.data.stream_url);
+          res.redirect(url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq"));
+        }else res.redirect(url.data.stream_url)
       }
     } else if (ch24.includes(req.params.channel)) {
       if (ch[req.params.channel]) {
@@ -397,6 +438,7 @@ exports.digi = async (req, res, next) => {
         let c24 = await axios.get(ch[req.params.channel]);
         if(consoleL) console.log(`digi| digi: original URL ${c24.data}`);
         if(consoleL) console.log(`digi| digi: rewrited URL ${m3uFixURL(c24.data, ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/")}`);
+        res.set("Content-Type", "application/vnd.apple.mpegurl");
         res.send(
           m3uFixURL(
             c24.data,
