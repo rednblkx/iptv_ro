@@ -2,6 +2,7 @@ const { default: axios } = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
 const puppeteer = require("puppeteer");
+const path = require('path');
 channels = [
   "antena1",
   "happy-channel",
@@ -305,7 +306,7 @@ async function getLogin() {
   return new Promise(async (resolve, reject) => {
     try {
       if(consoleL) console.log("antena| getLogin: getting auth.json file");
-      let auth = JSON.parse(fs.readFileSync("./auth.json").toString()).antena;
+      let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString()).antena;
       if(consoleL) console.log("antena| getLogin: auth.json file valid");
       if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "antena| No Credentials"
       if (auth.cookies) {
@@ -385,7 +386,7 @@ async function login() {
   return new Promise(async (resolve, reject) => {
   try {
     if(consoleL) console.log("antena| login: getting auth.json file");
-    let auth = JSON.parse(fs.readFileSync("./auth.json").toString());
+    let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
     if(consoleL && auth) console.log("antena| login: auth.json valid");
     let browser = await puppeteer.launch({ headless: true });
     if(consoleL && browser) console.log("antena| login: launching puppeteer");
@@ -397,11 +398,11 @@ async function login() {
     if(consoleL) console.log("antena| login: puppeteer ");
     await page.type(
       "input[name=email]",
-      JSON.parse(fs.readFileSync("./auth.json")).antena.username
+      JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json'))).antena.username
     );
     await page.type(
       "input[name=password]",
-      JSON.parse(fs.readFileSync("./auth.json")).antena.password
+      JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json'))).antena.password
     );
     await page.evaluate("document.querySelector('button[type=submit]').click()");
     await page.waitForSelector(".header");
@@ -429,7 +430,7 @@ async function login() {
             new Cookie(n.name, n.value).toString()
           ))
       );
-    fs.writeFileSync("./auth.json", JSON.stringify(auth));
+    fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
     if (auth.antena.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))) {
       if(consoleL) console.log("antena| login: cookies found ");
         resolve(auth.antena.cookies);

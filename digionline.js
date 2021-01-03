@@ -1,6 +1,7 @@
 const { default: axios } = require("axios");
 const fs = require("fs");
 const puppeteer = require("puppeteer");
+const path = require('path');
 
 let consoleL = false;
 
@@ -170,7 +171,7 @@ async function getLogin() {
   return new Promise(async (resolve, reject) => {
     try {
       if(consoleL) console.log("digi| getLogin: get auth.json");
-      let auth = JSON.parse(fs.readFileSync("./auth.json").toString()).digi;
+      let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString()).digi;
       if(consoleL) console.log("digi| getLogin: auth.json valid");
       if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "digi: No Credentials"
       if (auth.cookies) {
@@ -191,7 +192,7 @@ async function login() {
   return new Promise(async (resolve, reject) => {
     try {
       if(consoleL) console.log("digi| login: getting auth.json");
-      let auth = JSON.parse(fs.readFileSync("./auth.json").toString());
+      let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
       if(consoleL) console.log("digi| login: auth.json valid");
       if(consoleL) console.log("digi| login: launching browser");
       let browser = await puppeteer.launch({ headless: true });
@@ -220,7 +221,7 @@ async function login() {
               new Cookie(n.name, n.value).toString()
             ))
         );
-      fs.writeFileSync("./auth.json", JSON.stringify(auth));
+      fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
       
       if (
         auth.digi.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))
