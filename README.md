@@ -17,11 +17,19 @@
 /:channel(.m3u8) --> Live feed of a tv channel (see digionline.js file)
 /:channel(.m3u8)?ts=(0||1)&quality=(hq||mq||lq)
 ```
-Note: digi24, digisport1, digisport2, digisport3, digisport4 are available without account
+Note: digi24, digisport1, digisport2, digisport3, digisport4 are available without account.
 
-quality -> Choose the stream quality (hq, mq or lq)
+Note 2: For VLC use the "ts=1" query string(this is because digi banned the ffmpeg & VLC user-agents from accessing the main playlist but not the playlists with the .ts files)
+
+quality -> Choose the stream quality (see below)
 
 ts -> The API sends a playlist that has full-links for .ts and .key (see example below)
+
+Stream Qualities available:
+- hd - 1888595 - 1280x720 ( only for digi24, digisport1, digisport2, digisport3, digisport4 )
+- hq - 1213681 - 1024x576
+- mq - 296020 - 640x360
+- lq - 296020 - 320x180
 
 Example Response
 
@@ -43,7 +51,8 @@ Rewrited
 #EXT-X-TARGETDURATION:6
 #EXT-X-MEDIA-SEQUENCE:192712
 #EXT-X-KEY:METHOD=AES-128,URI="https://xxxx.yyyy.zzz/stream.key"
-#EXTINF:6.0, https://xxxx.yyyy.zzz/stream.ts
+#EXTINF:6.0,
+https://xxxx.yyyy.zzz/stream.ts
 ```
 ### ProPlus
 ```

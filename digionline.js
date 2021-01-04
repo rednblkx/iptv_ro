@@ -3,7 +3,7 @@ const fs = require("fs");
 const puppeteer = require("puppeteer");
 const path = require('path');
 
-let consoleL = false;
+let consoleL = true;
 
 var ch = {};
 
@@ -318,7 +318,7 @@ function m3uParse(data, quality) {
   while ((line = m3u.shift())) {
     if (
       line.startsWith("http") ||
-      (line.endsWith(".m3u8") && (line.includes(['hq','lq','mq'].includes(quality) ? quality : "hq")))
+      (line.endsWith(".m3u8") && (line.includes(['hq', 'lq', 'mq', 'hd'].includes(quality) ? quality : "hq")))
     ) {
       return line;
     }
@@ -433,27 +433,94 @@ exports.digi = async (req, res, next) => {
         }else res.redirect(url.data.stream_url)
       }
     } else if (ch24.includes(req.params.channel)) {
-      if (ch[req.params.channel]) {
-        if(consoleL) console.log("digi| digi: using cache");
-        let c24 = await axios.get(ch[req.params.channel]);
-        if(consoleL) console.log(`digi| digi: original URL ${c24.data}`);
-        if(consoleL) console.log(`digi| digi: rewrited URL ${m3uFixURL(c24.data, ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/")}`);
-        res.set("Content-Type", "application/vnd.apple.mpegurl");
-        res.send(
-          m3uFixURL(
-            c24.data,
-            ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/"
-          )
-        );
-      } else {
+      if (ch[req.params.channel] && req.query.ts === "1") {
+        if(req.query.quality){
+          if(consoleL) console.log("digi| digi: using cache");
+          let c24 = await axios.get(ch[req.params.channel]);
+          let quality = await axios.get(ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(c24.data, req.query.quality));
+          if(consoleL) console.log(`digi| digi: original M3U8 ${quality.data}`);
+          if(consoleL) console.log(`digi| digi: rewrited M3U8 ${m3uFixURL(quality.data, quality.config.url.match("(.*)/(.*).m3u8")[1] + "/")}`);
+          res.set("Content-Type", "application/vnd.apple.mpegurl");
+          res.send(
+            m3uFixURL(
+              quality.data,
+              quality.config.url.match("(.*)/(.*).m3u8")[1] + "/"
+            )
+          );
+        }else{
+          if(consoleL) console.log("digi| digi: using cache");
+          let c24 = await axios.get(ch[req.params.channel]);
+          let quality = await axios.get(ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(c24.data, "hd"));
+          if(consoleL) console.log(`digi| digi: original M3U8 ${quality.data}`);
+          if(consoleL) console.log(`digi| digi: rewrited M3U8 ${m3uFixURL(quality.data, quality.config.url.match("(.*)/(.*).m3u8")[1] + "/")}`);
+          res.set("Content-Type", "application/vnd.apple.mpegurl");
+          res.send(
+            m3uFixURL(
+              quality.data,
+              quality.config.url.match("(.*)/(.*).m3u8")[1] + "/"
+            )
+          );
+        }
+      } else if(ch[req.params.channel] && (!req.query.ts || req.query.ts === "0")){
         try {
-          if(consoleL) console.log(`digi| digi: get from 24`);
-          let video = await getFrom24(req.params.channel);
-          if(consoleL && video.data) console.log(`digi| digi: got response`);
-          if(consoleL && video.data) console.log(`digi| digi: ${JSON.stringify(video.data)}`);
-          res.redirect(video.data.file);
+          if(req.query.quality){
+            if(consoleL) console.log(`digi| digi: redirecting`);
+            if(consoleL) console.log(`digi| digi: selected quality ${req.query.quality}`);
+            let c24 = await axios.get(ch[req.params.channel]);
+            res.redirect(ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(c24.data, req.query.quality));
+          }else{
+            if(consoleL) console.log(`digi| digi: redirecting`);
+            res.redirect(ch[req.params.channel]);
+          }
         } catch (error) {
           res.status(500).send(error);
+        }
+      } else if(req.query.ts === "1"){
+        if(req.query.quality){
+          if(consoleL) console.log("digi| digi: using live");
+          let video = await getFrom24(req.params.channel);
+          let c24 = axios.get(video.data.file);
+          ch[req.params.channel] = video.data.file;
+          let quality = await axios.get(video.data.file.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(c24.data, req.query.quality));
+          if(consoleL) console.log(`digi| digi: selected quality ${req.query.quality}`);
+          if(consoleL) console.log(`digi| digi: original M3U8 ${quality.data}`);
+          if(consoleL) console.log(`digi| digi: rewrited M3U8 ${m3uFixURL(quality.data, quality.config.url.match("(.*)/(.*).m3u8")[1] + "/")}`);
+          res.set("Content-Type", "application/vnd.apple.mpegurl");
+          res.send(
+            m3uFixURL(
+              quality.data,
+              quality.config.url.match("(.*)/(.*).m3u8")[1] + "/"
+            )
+          );
+        }else{
+          if(consoleL) console.log("digi| digi: using live");
+          let video = await getFrom24(req.params.channel);
+          let c24 = axios.get(video.data.file);
+          ch[req.params.channel] = video.data.file;
+          if(consoleL) console.log(`digi| digi: original M3U8 ${c24.data}`);
+          if(consoleL) console.log(`digi| digi: rewrited M3U8 ${m3uFixURL(c24.data, c24.config.url.match("(.*)/(.*).m3u8")[1] + "/")}`);
+          res.set("Content-Type", "application/vnd.apple.mpegurl");
+          res.send(
+            m3uFixURL(
+              c24.data,
+              c24.config.url.match("(.*)/(.*).m3u8")[1] + "/"
+            )
+          );
+        }
+      } else {
+        if(req.query.quality){
+          if(consoleL) console.log("digi| digi: using live");
+          let video = await getFrom24(req.params.channel);
+          let c24 = await axios.get(video.data.file);
+          ch[req.params.channel] = video.data.file;
+          if(consoleL) console.log(`digi| digi: original M3U8 ${c24.data}`);
+          if(consoleL) console.log(`digi| digi: rewrited M3U8 ${m3uFixURL(c24.data, c24.config.url.match("(.*)/(.*).m3u8")[1] + "/")}`);
+          res.redirect(video.data.file.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(c24.data, req.query.quality))
+        }else{
+          if(consoleL) console.log("digi| digi: using live");
+          let video = await getFrom24(req.params.channel);
+          ch[req.params.channel] = video.data.file;
+          res.redirect(video.data.file)
         }
       }
     } else next();
