@@ -395,42 +395,49 @@ exports.digi = async (req, res, next) => {
           res.redirect(ch[req.params.channel]);
         }
       } else {
-        if(consoleL) console.log("digi| digi: getting from digi");
-        let url = await getFromDigi(
-          channels[req.params.channel].id,
-          req.params.channel,
-          channels[req.params.channel].category
-        );
-        if(consoleL && url.data) console.log("digi| digi: got response");
-        if(consoleL && url.data) console.log(`digi| digi: ${JSON.stringify(url.data)}`);
-        // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-        // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
-        // url != 0 ? res.redirect(url) : res.status(404)
-        if(req.query.ts == '1'){
-          let m3u8 = await axios.get(url.data.stream_url);
-          if(consoleL && m3u8.data) console.log(`digi| digi: Original M3U8 ${m3u8.data}`);
-          ch[req.params.channel] =
-            url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq");
-          let m3u8_quality = await axios.get(
-            url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq")
+        try {
+          if(consoleL) console.log("digi| digi: getting from digi");
+          let url = await getFromDigi(
+            channels[req.params.channel].id,
+            req.params.channel,
+            channels[req.params.channel].category
           );
-          if(consoleL && m3u8_quality.data) console.log(`digi| digi: Selected Quality M3U8 ${m3u8_quality.data}`);
-          res.set("Content-Type", "application/vnd.apple.mpegurl");
-          res.send(
-            m3uFixURL(
-              m3u8_quality.data,
-              (
-                url.data.stream_url.match("(.*)/(.*).m3u8")[1] +
-                "/" +
-                m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq")
-              ).match("(.*)/(.*).m3u8")[1] + "/"
-            )
-          );
-          if(consoleL) console.log(`digi| digi: Rewrited URL ${m3uFixURL(m3u8_quality.data, (url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data)).match("(.*)/(.*).m3u8")[1] + "/")}`);
-        }else if(req.query.quality){
-          let m3u8 = await axios.get(url.data.stream_url);
-          res.redirect(url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq"));
-        }else res.redirect(url.data.stream_url)
+          if(url.data.stream_url === "" && url.data.stream_err !== ""){
+            throw url.data.stream_err
+          }
+          if(consoleL && url.data) console.log("digi| digi: got response");
+          if(consoleL && url.data) console.log(`digi| digi: ${JSON.stringify(url.data)}`);
+          // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+          // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
+          // url != 0 ? res.redirect(url) : res.status(404)
+          if(req.query.ts == '1'){
+            let m3u8 = await axios.get(url.data.stream_url);
+            if(consoleL && m3u8.data) console.log(`digi| digi: Original M3U8 ${m3u8.data}`);
+            ch[req.params.channel] =
+              url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq");
+            let m3u8_quality = await axios.get(
+              url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq")
+            );
+            if(consoleL && m3u8_quality.data) console.log(`digi| digi: Selected Quality M3U8 ${m3u8_quality.data}`);
+            res.set("Content-Type", "application/vnd.apple.mpegurl");
+            res.send(
+              m3uFixURL(
+                m3u8_quality.data,
+                (
+                  url.data.stream_url.match("(.*)/(.*).m3u8")[1] +
+                  "/" +
+                  m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq")
+                ).match("(.*)/(.*).m3u8")[1] + "/"
+              )
+            );
+            if(consoleL) console.log(`digi| digi: Rewrited URL ${m3uFixURL(m3u8_quality.data, (url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data)).match("(.*)/(.*).m3u8")[1] + "/")}`);
+          }else if(req.query.quality){
+            let m3u8 = await axios.get(url.data.stream_url);
+            res.redirect(url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq"));
+          }else res.redirect(url.data.stream_url) 
+        } catch (error) {
+          res.status(400).send(error)
+        }
       }
     } else if (ch24.includes(req.params.channel)) {
       if (ch[req.params.channel] && req.query.ts === "1") {
