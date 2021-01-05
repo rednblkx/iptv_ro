@@ -221,6 +221,7 @@ async function login() {
               new Cookie(n.name, n.value).toString()
             ))
         );
+        await browser.close()
       fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
       
       if (
