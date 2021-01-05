@@ -430,6 +430,7 @@ async function login() {
             new Cookie(n.name, n.value).toString()
           ))
       );
+      await browser.close();
     fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
     if (auth.antena.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))) {
       if(consoleL) console.log("antena| login: cookies found ");
