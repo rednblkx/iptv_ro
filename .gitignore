@@ -2,4 +2,4 @@ node_modules
 yarn.lock
 yarn-error.log
 auth.json
-test.js
+test*.js
