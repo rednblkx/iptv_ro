@@ -66,7 +66,7 @@ Acces login configuration page at "/login", select the desired service and fill 
 
 ## Notes
 
-Note for ARM based systems: the node-libcurl is not available for ARM
+Note for ARM based systems: node-libcurl binary not available, npm will build it from source
 
 Note for Libreelec users: the login for antena & digi not working for now because libreelec lacks libcurl dev package
 
