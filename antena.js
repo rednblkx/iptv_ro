@@ -1,8 +1,8 @@
 const { default: axios } = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
-const puppeteer = require("puppeteer");
 const path = require('path');
+const { curly } = require('node-libcurl')
 channels = [
   "antena1",
   "happy-channel",
@@ -388,49 +388,35 @@ async function login() {
     if(consoleL) console.log("antena| login: getting auth.json file");
     let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
     if(consoleL && auth) console.log("antena| login: auth.json valid");
-    let browser = await puppeteer.launch({ headless: true });
-    if(consoleL && browser) console.log("antena| login: launching puppeteer");
-    let page = await browser.newPage();
-    if(consoleL && page) console.log("antena| login: puppeteer newPage");
-    await page.goto("https://antenaplay.ro/intra-in-cont", {
-      waitUntil: "domcontentloaded",
+    let tokens = await curly.get("https://antenaplay.ro/intra-in-cont", {
+      httpHeader: [
+        "accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "upgrade-insecure-requests: 1",
+      ],
+      userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",   });
+    let $ = cheerio.load(tokens.data);
+    const login = await curly.post('https://antenaplay.ro/intra-in-cont', {
+      postFields: `email=${encodeURIComponent(auth.antena.username)}&password=${encodeURIComponent(auth.antena.password)}&_token=${$("input[name=_token]").val()}`,
+      httpHeader: [
+        'Content-Type: application/x-www-form-urlencoded',
+        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Origin: https://www.digionline.ro',
+  
+      ],
+      referer: "https://antenaplay.ro/intra-in-cont",
+      cookie: tokens.headers[0]["Set-Cookie"].map((a) => a.match(/[^;]*/)[0]).join(";"),
+      userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",
+    })
+    let live = await curly.get("https://antenaplay.ro/live/antena1", {
+      httpHeader: [
+        "accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "upgrade-insecure-requests: 1",
+      ],
+      userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",
+      cookie: login.headers[0]["Set-Cookie"].map((a) => a.match(/[^;]*/)[0]).join(";")
     });
-    if(consoleL) console.log("antena| login: puppeteer ");
-    await page.type(
-      "input[name=email]",
-      JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json'))).antena.username
-    );
-    await page.type(
-      "input[name=password]",
-      JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json'))).antena.password
-    );
-    await page.evaluate("document.querySelector('button[type=submit]').click()");
-    await page.waitForSelector(".header");
-    await page.goto("https://antenaplay.ro/live/antena1", {
-      waitUntil: "domcontentloaded",
-    });
-    (await page.cookies())
-      .map((b) =>
-        [
-          "deviceName",
-          "deviceType",
-          "deviceId",
-          "XSRF-TOKEN",
-          "laravel_session",
-        ].includes(b.name)
-          ? b
-          : null
-      )
-      .filter(function (el) {
-        return el != null;
-      })
-      .forEach(
-        (el, index, array) =>
-          (auth.antena.cookies = array.map((n) =>
-            new Cookie(n.name, n.value).toString()
-          ))
-      );
-      await browser.close();
+    console.log(live.headers[0]["Set-Cookie"]);
+    auth.antena.cookies = live.headers[0]["Set-Cookie"].map((a) => a.match(/[^;]*/)[0])
     fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
     if (auth.antena.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))) {
       if(consoleL) console.log("antena| login: cookies found ");
