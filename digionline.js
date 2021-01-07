@@ -1,7 +1,7 @@
 const { default: axios } = require("axios");
 const fs = require("fs");
-const puppeteer = require("puppeteer");
 const path = require('path');
+const { curly } = require('node-libcurl')
 
 let consoleL = true;
 
@@ -189,49 +189,34 @@ async function getLogin() {
   });
 }
 async function login() {
+  let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
   return new Promise(async (resolve, reject) => {
     try {
-      if(consoleL) console.log("digi| login: getting auth.json");
-      let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
-      if(consoleL) console.log("digi| login: auth.json valid");
-      if(consoleL) console.log("digi| login: launching browser");
-      let browser = await puppeteer.launch({ headless: true });
-      if(consoleL && browser) console.log("digi| login: browser launched");
-      let page = await browser.newPage();
-      if(consoleL && page) console.log("digi| login: new page");
-      await page.goto("https://www.digionline.ro/auth/login", {
-        waitUntil: "domcontentloaded",
-      });
-      await page.type("#form-login-email", auth.digi.username);
-      await page.type("#form-login-password", auth.digi.password);
-      await page.evaluate(
-        "document.querySelector('button[type=submit]').click()"
-      );
-      await page.waitForSelector(".login-step.login-step-4");
-      (await page.cookies())
-        .map((b) =>
-          ["cmp_level", "deviceId", "DOSESSV3PRI"].includes(b.name) ? b : null
-        )
-        .filter(function (el) {
-          return el != null;
-        })
-        .forEach(
-          (el, index, array) =>
-            (auth.digi.cookies = array.map((n) =>
-              new Cookie(n.name, n.value).toString()
-            ))
-        );
-        await browser.close()
-      fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
-      
-      if (
-        auth.digi.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))
-      ) {
-      if(consoleL) console.log("digi| login: cookies found");
-        resolve(auth.digi.cookies);
-      } else {
-        reject("Something went wrong while signing in");
-      }
+      curly.post('https://www.digionline.ro/auth/login', {
+        postFields: `form-login-email=${encodeURIComponent(auth.digi.username)}&form-login-password=${encodeURIComponent(auth.digi.password)}&sbm=`,
+        httpHeader: [
+          'Content-Type: application/x-www-form-urlencoded',
+          'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Origin: https://www.digionline.ro',
+
+        ],
+        referer: "https://www.digionline.ro/auth/login",
+        userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",
+      }).then(res => {
+        auth.digi.cookies = [];
+        res.headers[0]['Set-Cookie'].forEach(cookie => {
+          auth.digi.cookies.push(cookie.match(/[^;]*/)[0]);
+        });
+        fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
+        if (
+          auth.digi.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))
+        ) {
+        if(consoleL) console.log("digi| login: cookies found");
+          resolve(auth.digi.cookies);
+        } else {
+          reject("Something went wrong while signing in");
+        }
+      })
     } catch (error) {
       reject("digi| login: " + error);
       if(consoleL)
