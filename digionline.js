@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require('path');
 const { curly } = require('node-libcurl')
 
-let consoleL = true;
+let consoleL = false;
 
 var ch = {};
 
