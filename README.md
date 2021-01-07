@@ -62,6 +62,8 @@ https://xxxx.yyyy.zzz/stream.ts
 
 Access /login and fill accordingly
 
+Note for ARM based systems: the node-libcurl is not available for ARM
+
 Note for Libreelec users: the login for antena & digi not working for now because libreelec lacks libcurl dev package
 
 This project is licensed under the terms of the MIT license.
