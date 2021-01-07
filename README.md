@@ -62,4 +62,6 @@ https://xxxx.yyyy.zzz/stream.ts
 
 Access /login and fill accordingly
 
+Note for Libreelec users: the login for antena & digi not working for now because libreelec lacks libcurl dev package
+
 This project is licensed under the terms of the MIT license.
