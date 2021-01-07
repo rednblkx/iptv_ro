@@ -3,3 +3,5 @@ yarn.lock
 yarn-error.log
 auth.json
 test*.js
+cert.pem
+package-lock.json

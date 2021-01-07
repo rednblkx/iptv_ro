@@ -2,8 +2,12 @@ const { default: axios } = require("axios");
 const fs = require("fs");
 const path = require('path');
 const { curly } = require('node-libcurl')
+const tls = require('tls')
+const certFilePath = path.join(__dirname, 'cert.pem')
+const tlsData = tls.rootCertificates.join('\n');
+fs.writeFileSync(certFilePath, tlsData);
 
-let consoleL = false;
+let consoleL = true;
 
 var ch = {};
 
@@ -192,7 +196,7 @@ async function login() {
   let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
   return new Promise(async (resolve, reject) => {
     try {
-      curly.post('https://www.digionline.ro/auth/login', {
+      let log = await curly.post('https://www.digionline.ro/auth/login', {
         postFields: `form-login-email=${encodeURIComponent(auth.digi.username)}&form-login-password=${encodeURIComponent(auth.digi.password)}&sbm=`,
         httpHeader: [
           'Content-Type: application/x-www-form-urlencoded',
@@ -200,11 +204,13 @@ async function login() {
           'Origin: https://www.digionline.ro',
 
         ],
+        caInfo: certFilePath,
+        VERBOSE: true,
         referer: "https://www.digionline.ro/auth/login",
         userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",
-      }).then(res => {
+      })
         auth.digi.cookies = [];
-        res.headers[0]['Set-Cookie'].forEach(cookie => {
+        log.headers[0]['Set-Cookie'].forEach(cookie => {
           auth.digi.cookies.push(cookie.match(/[^;]*/)[0]);
         });
         fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
@@ -216,7 +222,6 @@ async function login() {
         } else {
           reject("Something went wrong while signing in");
         }
-      })
     } catch (error) {
       reject("digi| login: " + error);
       if(consoleL)
