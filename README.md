@@ -60,10 +60,14 @@ https://xxxx.yyyy.zzz/stream.ts
 ```
 ## Authentication
 
-Access /login and fill accordingly
+Acces login configuration page at "/login", select the desired service and fill accordingly.
+
+------------------------------------
+
+## Notes
 
 Note for ARM based systems: the node-libcurl is not available for ARM
 
 Note for Libreelec users: the login for antena & digi not working for now because libreelec lacks libcurl dev package
 
-This project is licensed under the terms of the MIT license.
+&copy; **This project is licensed under the terms of the MIT license.**
