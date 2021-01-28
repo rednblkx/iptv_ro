@@ -1,8 +1,12 @@
 const {default: axios} = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
-const { curly } = require("node-libcurl");
+const request = require('request');
 const path = require('path');
+const tls = require('tls')
+const certFilePath = path.join(__dirname, 'cert.pem')
+const tlsData = tls.rootCertificates.join('\n');
+fs.writeFileSync(certFilePath, tlsData);
 
 const channels = {
     "pro-tv": 1,
@@ -19,17 +23,20 @@ async function login() {
             let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
             if(consoleL) console.log("pro| login: auth.json valid");
             if(consoleL) console.log("pro| login: now signing in");
-            let step1 = await curly.post("https://protvplus.ro/login", 
-            {
-                postFields: `email=${encodeURIComponent(auth.pro.username)}&password=${encodeURIComponent(auth.pro.password)}&login=Autentificare&_do=content11374-loginForm-form-submit`, 
+            let step1 = await curly.post('https://protvplus.ro/login', {
+                postFields: `email=${encodeURIComponent(auth.pro.username)}&password=${encodeURIComponent(auth.pro.password)}&login=Autentificare&_do=content11374-loginForm-form-submit`,
                 httpHeader: [
-                    'accept: */*',
-                    "accept-language: en-GB,en;q=0.9",
-                    "content-type: application/x-www-form-urlencoded",
-                    'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36',
+                  'Content-Type: application/x-www-form-urlencoded',
+                  'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                  'Origin: https://protvplus.ro',
+        
                 ],
+                caInfo: certFilePath,
+                // VERBOSE: true,
                 referer: "https://protvplus.ro/",
-            });
+                userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",
+              })
+
             if(consoleL && step1 && step1.data) console.log("pro| login: received response", step1.data , step1.headers);
             if (step1.headers[0]["Set-Cookie"]) {
                 if(consoleL) console.log("pro| login: got cookies");
