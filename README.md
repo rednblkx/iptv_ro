@@ -58,7 +58,6 @@ https://xxxx.yyyy.zzz/stream.ts
 ```
 /:channel --> Live feed of a tv channel (see protv.js file)
 ```
-!!**Windows**: Login may not work, windows is a strange thing sometimes!!
 
 ## Authentication
 
@@ -68,8 +67,5 @@ Acces login configuration page at "/login", select the desired service and fill 
 
 ## Notes
 
-Note for ARM based systems: node-libcurl binary not available, npm will build it from source
-
-Note for Libreelec users: the login for antena & digi not working for now because libreelec lacks libcurl dev package
 
 &copy; **This project is licensed under the terms of the MIT license.**
