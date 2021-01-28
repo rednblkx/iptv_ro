@@ -58,6 +58,8 @@ https://xxxx.yyyy.zzz/stream.ts
 ```
 /:channel --> Live feed of a tv channel (see protv.js file)
 ```
+!!**Windows**: Login may not work, windows is a strange thing sometimes!!
+
 ## Authentication
 
 Acces login configuration page at "/login", select the desired service and fill accordingly.
