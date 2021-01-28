@@ -1,6 +1,7 @@
 const {default: axios} = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
+const { curly } = require("node-libcurl");
 const path = require('path');
 
 const channels = {
@@ -18,59 +19,49 @@ async function login() {
             let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
             if(consoleL) console.log("pro| login: auth.json valid");
             if(consoleL) console.log("pro| login: now signing in");
-            let step1 = await axios.post("https://protvplus.ro/", `------WebKitFormBoundaryqDXFH3zcgh9GNa3N\r\nContent-Disposition: form-data; name="email"\r\n\r\n${
-                auth.pro.username
-            }\r\n------WebKitFormBoundaryqDXFH3zcgh9GNa3N\r\nContent-Disposition: form-data; name="password"\r\n\r\n${
-                auth.pro.password
-            }\r\n------WebKitFormBoundaryqDXFH3zcgh9GNa3N\r\nContent-Disposition: form-data; name="_do"\r\n\r\nheader-header_login-loginForm-form-submit\r\n------WebKitFormBoundaryqDXFH3zcgh9GNa3N\r\nContent-Disposition: form-data; name="login"\r\n\r\nIntră în cont\r\n------WebKitFormBoundaryqDXFH3zcgh9GNa3N--\r\n`, {
-                headers: {
-                    accept: "*/*",
-                    "accept-language": "en-GB,en;q=0.9",
-                    "cache-control": "no-cache",
-                    "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryqDXFH3zcgh9GNa3N",
-                    pragma: "no-cache",
-                    "sec-fetch-dest": "empty",
-                    "sec-fetch-mode": "cors",
-                    "sec-fetch-site": "same-origin",
-                    "sec-gpc": "1",
-                    "x-requested-with": "XMLHttpRequest"
-                },
-                referrer: "https://protvplus.ro/",
-                referrerPolicy: "strict-origin-when-cross-origin",
-                mode: "cors"
+            let step1 = await curly.post("https://protvplus.ro/login", 
+            {
+                postFields: `email=${encodeURIComponent(auth.pro.username)}&password=${encodeURIComponent(auth.pro.password)}&login=Autentificare&_do=content11374-loginForm-form-submit`, 
+                httpHeader: [
+                    'accept: */*',
+                    "accept-language: en-GB,en;q=0.9",
+                    "content-type: application/x-www-form-urlencoded",
+                    'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36',
+                ],
+                referer: "https://protvplus.ro/",
             });
-            if(consoleL && step1 && step1.data) console.log("pro| login: received response");
-            if (step1.headers["set-cookie"]) {
+            if(consoleL && step1 && step1.data) console.log("pro| login: received response", step1.data , step1.headers);
+            if (step1.headers[0]["Set-Cookie"]) {
                 if(consoleL) console.log("pro| login: got cookies");
-                if(consoleL) console.log(`pro| login: cookies_received = ${step1.headers["set-cookie"]}`);
-                if(consoleL) console.log(`pro| login: getting Bearer token`);
-                let step2 = await axios.get("https://protvplus.ro/api/v1/user/check", {
-                    headers: {
-                        accept: "application/json, text/javascript, */*; q=0.01",
-                        "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-                        "cache-control": "no-cache",
-                        pragma: "no-cache",
-                        "sec-fetch-dest": "empty",
-                        "sec-fetch-mode": "cors",
-                        "sec-fetch-site": "same-origin",
-                        "sec-gpc": "1",
-                        "x-requested-with": "XMLHttpRequest",
-                        cookie: step1.headers["set-cookie"][0].match(/[^;]*/)[0] + ";"
-                    },
-                    referrer: "https://protvplus.ro/",
-                    referrerPolicy: "strict-origin-when-cross-origin",
-                    mode: "cors"
-                });
-                if(consoleL && step2 && step2.data) console.log(`pro| login: got response`);
-                if(consoleL) console.log(step2.data);
-                if (step2.data && step2.data.data && step2.data.data.bearer) {
-                    if(consoleL) console.log(`pro| login: got Bearer token`);
-                    if(consoleL) console.log(`pro| login: ${step2.data.data.bearer}`);
-                    auth.pro.cookies = step2.headers["set-cookie"][0].match(/[^;]*/)[0];
-                    auth.pro.bearer = step2.data.data.bearer;
+                if(consoleL) console.log(`pro| login: cookies_received = ${step1.headers[0]["Set-Cookie"]}`);
+                // if(consoleL) console.log(`pro| login: getting Bearer token`);
+                // let step2 = await axios.get("https://protvplus.ro/api/v1/user/check", {
+                //     headers: {
+                //         accept: "application/json, text/javascript, */*; q=0.01",
+                //         "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+                //         "cache-control": "no-cache",
+                //         pragma: "no-cache",
+                //         "sec-fetch-dest": "empty",
+                //         "sec-fetch-mode": "cors",
+                //         "sec-fetch-site": "same-origin",
+                //         "sec-gpc": "1",
+                //         "x-requested-with": "XMLHttpRequest",
+                //         cookie: step1.headers[0]["set-cookie"][0].match(/[^;]*/)[0] + ";"
+                //     },
+                //     referrer: "https://protvplus.ro/",
+                //     referrerPolicy: "strict-origin-when-cross-origin",
+                //     mode: "cors"
+                // });
+                // if(consoleL && step2 && step2.data) console.log(`pro| login: got response`);
+                // if(consoleL) console.log(step2.data);
+                // if (step2.data && step2.data.data && step2.data.data.bearer) {
+                    // if(consoleL) console.log(`pro| login: got Bearer token`);
+                    // if(consoleL) console.log(`pro| login: ${step1.data.data.bearer}`);
+                    auth.pro.cookies = step1.headers[0]["Set-Cookie"][0].match(/[^;]*/)[0];
+                    // auth.pro.bearer = step2.data.data.bearer;
                     fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
-                    resolve({cookie: auth.pro.cookies, bearer: auth.pro.bearer});
-                }else reject("pro| login: No Bearer (Username or Password incorrect)")
+                    resolve({cookie: auth.pro.cookies});
+                // }else reject("pro| login: No Bearer (Username or Password incorrect)")
             } else reject("pro| login: Something wen wrong while signing in");
 
         } catch (error) {
@@ -86,14 +77,14 @@ async function getLogin() {
             let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString()).pro;
             if(consoleL && auth) console.log(`pro| getLogin: auth.json valid`);
             if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "pro: No Credentials"
-            if (auth.cookies && auth.bearer) {
+            if (auth.cookies) {
                 if(consoleL) console.log(`pro| getLogin: using existing tokens`);
-                resolve({cookie: auth.cookies, bearer: auth.bearer});
-            } else if (!auth.cookies || !auth.bearer) {
+                resolve({cookie: auth.cookies});
+            } else if (!auth.cookies) {
                 if(consoleL) console.log(`pro| getLogin: trying getLogin`);
                 let token = await login();
                 if(consoleL && token) console.log(`pro| getLogin: got tokens`);
-                resolve({cookie: token.cookie, bearer: token.bearer});
+                resolve({cookie: token.cookie});
             }
         } catch (error) {
             reject("pro| getLogin: " + error);
@@ -135,9 +126,7 @@ async function getPlaylist(name) {
                 headers: {
                     accept: "*/*",
                     "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-                    authorization: `Bearer ${
-                        auth.bearer
-                    }`,
+                    authorization: `Bearer undefined`,
                     "cache-control": "no-cache",
                     pragma: "no-cache",
                     "sec-fetch-dest": "empty",
