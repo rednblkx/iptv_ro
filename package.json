@@ -1,5 +1,5 @@
 {
-  "name": "iptv_aio",
+  "name": "iptv_ro",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -11,5 +11,8 @@
   },
   "scripts": {
     "start": "node index.js"
+  },
+  "engines": {
+    "node": "<=0.14"
   }
 }
