@@ -7,7 +7,7 @@ const certFilePath = path.join(__dirname, 'cert.pem')
 const tlsData = tls.rootCertificates.join('\n');
 fs.writeFileSync(certFilePath, tlsData);
 
-let consoleL = true;
+let consoleL = false;
 
 var ch = {};
 
