@@ -1,12 +1,7 @@
 const {default: axios} = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
-const request = require('request');
 const path = require('path');
-const tls = require('tls')
-const certFilePath = path.join(__dirname, 'cert.pem')
-const tlsData = tls.rootCertificates.join('\n');
-fs.writeFileSync(certFilePath, tlsData);
 
 const channels = {
     "pro-tv": 1,
@@ -23,52 +18,26 @@ async function login() {
             let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
             if(consoleL) console.log("pro| login: auth.json valid");
             if(consoleL) console.log("pro| login: now signing in");
-            let step1 = await curly.post('https://protvplus.ro/login', {
-                postFields: `email=${encodeURIComponent(auth.pro.username)}&password=${encodeURIComponent(auth.pro.password)}&login=Autentificare&_do=content11374-loginForm-form-submit`,
-                httpHeader: [
-                  'Content-Type: application/x-www-form-urlencoded',
-                  'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                  'Origin: https://protvplus.ro',
-        
-                ],
-                caInfo: certFilePath,
-                // VERBOSE: true,
-                referer: "https://protvplus.ro/",
-                userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",
+            let step1 = await axios.post(
+                "https://protvplus.ro/login",
+                `email=${encodeURIComponent(auth.pro.username)}&password=${encodeURIComponent(auth.pro.password)}&login=Autentificare&_do=content11374-loginForm-form-submit`,
+                {
+                headers: {
+                    'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Cookie": "SID=l73i9m3q6psvkm19s7piphmsni; votoken=DXuxOECh5nd8wwtaQ5qh6X90fLEM4Ee8MXlfc1FyhF4s31EWQ3YjUZg7Z8JPGvMVF3YGlpRhTmMC9n5UG6%2BBAHsidG9rZW4iOiI1ZDdkOTFmMDUzMDg0MjRmYjM5ODg5MDdlNDg1NWY1YSIsImlkIjoxMjQ2MDI4LCJuYW1lIjoiV2hpdGUiLCJlbWFpbCI6ImRhbm5lZ3J1NDBAZ21haWwuY29tIiwiZGV2aWNlIjp7InR5cGUiOiJkZXNrdG9wIiwib3MiOiJXaW5kb3dzIiwib3NfdmVyc2lvbiI6IjEwLjAiLCJtb2RlbCI6bnVsbCwibWFudWZhY3R1cmVyIjpudWxsLCJwcm9kdWN0aW9uX3llYXIiOm51bGwsIm5hbWUiOm51bGwsImJyb3dzZXIiOiJDaHJvbWUiLCJicm93c2VyX3ZlcnNpb24iOiI4OC4wLjQzMjQuOTYifX0%3D;"
+                },
+                responseType: 'document',
+                maxRedirects: 0,
+                validateStatus: (status) => status === 302
               })
-
             if(consoleL && step1 && step1.data) console.log("pro| login: received response", step1.data , step1.headers);
-            if (step1.headers[0]["Set-Cookie"]) {
+            if (step1.headers["set-cookie"]) {
                 if(consoleL) console.log("pro| login: got cookies");
-                if(consoleL) console.log(`pro| login: cookies_received = ${step1.headers[0]["Set-Cookie"]}`);
-                // if(consoleL) console.log(`pro| login: getting Bearer token`);
-                // let step2 = await axios.get("https://protvplus.ro/api/v1/user/check", {
-                //     headers: {
-                //         accept: "application/json, text/javascript, */*; q=0.01",
-                //         "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-                //         "cache-control": "no-cache",
-                //         pragma: "no-cache",
-                //         "sec-fetch-dest": "empty",
-                //         "sec-fetch-mode": "cors",
-                //         "sec-fetch-site": "same-origin",
-                //         "sec-gpc": "1",
-                //         "x-requested-with": "XMLHttpRequest",
-                //         cookie: step1.headers[0]["set-cookie"][0].match(/[^;]*/)[0] + ";"
-                //     },
-                //     referrer: "https://protvplus.ro/",
-                //     referrerPolicy: "strict-origin-when-cross-origin",
-                //     mode: "cors"
-                // });
-                // if(consoleL && step2 && step2.data) console.log(`pro| login: got response`);
-                // if(consoleL) console.log(step2.data);
-                // if (step2.data && step2.data.data && step2.data.data.bearer) {
-                    // if(consoleL) console.log(`pro| login: got Bearer token`);
-                    // if(consoleL) console.log(`pro| login: ${step1.data.data.bearer}`);
-                    auth.pro.cookies = step1.headers[0]["Set-Cookie"][0].match(/[^;]*/)[0];
-                    // auth.pro.bearer = step2.data.data.bearer;
-                    fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
-                    resolve({cookie: auth.pro.cookies});
-                // }else reject("pro| login: No Bearer (Username or Password incorrect)")
+                if(consoleL) console.log(`pro| login: cookies_received = ${step1.headers["set-cookie"]}`);
+                auth.pro.cookies = step1.headers["set-cookie"].map((a) => a.match(/[^;]*/)[0]).join(";");
+                fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
+                resolve({cookie: auth.pro.cookies});
             } else reject("pro| login: Something wen wrong while signing in");
 
         } catch (error) {
@@ -112,18 +81,8 @@ async function getPlaylist(name) {
                 headers: {
                     accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
                     "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-                    "cache-control": "no-cache",
-                    pragma: "no-cache",
-                    "sec-fetch-dest": "document",
-                    "sec-fetch-mode": "navigate",
-                    "sec-fetch-site": "same-origin",
-                    "sec-fetch-user": "?1",
-                    "sec-gpc": "1",
-                    "upgrade-insecure-requests": "1",
-                    cookie: auth.cookie + ";"
-                },
-                referrerPolicy: "strict-origin-when-cross-origin",
-                mode: "cors"
+                    cookie: auth.cookie
+                }
             });
             if(consoleL && step1.data) console.log(`pro| getPlaylist: got first link`);
             let $ = cheerio.load(step1.data);
@@ -134,20 +93,12 @@ async function getPlaylist(name) {
                     accept: "*/*",
                     "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
                     authorization: `Bearer undefined`,
-                    "cache-control": "no-cache",
-                    pragma: "no-cache",
-                    "sec-fetch-dest": "empty",
-                    "sec-fetch-mode": "cors",
-                    "sec-fetch-site": "same-origin",
-                    "sec-gpc": "1",
                     "x-requested-with": "XMLHttpRequest",
-                    cookie: auth.cookie + ";"
-                },
-                referrer: `https://protvplus.ro/tv-live/${
-                    channels[name]
-                }-${name}`,
-                referrerPolicy: "strict-origin-when-cross-origin",
-                mode: "cors"
+                    cookie: auth.cookie,
+                    referrer: `https://protvplus.ro/tv-live/${
+                        channels[name]
+                    }-${name}`,
+                }
             });
             if(consoleL && step1.data) console.log(`pro| getPlaylist: got channel's second link`);
             $ = cheerio.load(step2.data);
@@ -157,18 +108,9 @@ async function getPlaylist(name) {
                 headers: {
                     accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
                     "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-                    "cache-control": "no-cache",
-                    pragma: "no-cache",
-                    "sec-fetch-dest": "iframe",
-                    "sec-fetch-mode": "navigate",
-                    "sec-fetch-site": "same-site",
-                    "sec-gpc": "1",
-                    "upgrade-insecure-requests": "1",
-                    cookie: auth.cookie + ";"
+                    cookie: auth.cookie,
+                    referrer: "https://protvplus.ro/"
                 },
-                referrer: "https://protvplus.ro/",
-                referrerPolicy: "strict-origin-when-cross-origin",
-                mode: "cors"
             });
             if(consoleL && step3.data) console.log(`pro| getPlaylist: got channel's stream`);
             if(consoleL && step3.data) console.log(`pro| getPlaylist: ${JSON.parse(step3.data.match('{"HLS"(.*)}]}')[0]).HLS[0].src}`);
@@ -203,17 +145,8 @@ exports.pro = async (req, res, next) => {
             let quality = await axios.get(await getPlaylist(req.params.channel), {
                 headers: {
                     accept: "*/*",
-                    "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-                    "cache-control": "no-cache",
-                    pragma: "no-cache",
-                    "sec-fetch-dest": "empty",
-                    "sec-fetch-mode": "cors",
-                    "sec-fetch-site": "cross-site",
-                    "sec-gpc": "1"
+                    referrer: "https://media.cms.protvplus.ro/",
                 },
-                referrer: "https://media.cms.protvplus.ro/",
-                referrerPolicy: "strict-origin-when-cross-origin",
-                mode: "cors"
             });
             if(consoleL && quality.data) console.log(`pro| pro: got channel's stream URL`);
             if(consoleL && quality.data) console.log(`pro| pro: ${quality.config.url.match("(.*)/playlist.m3u8")[1] + "/" + selectQuality(quality.data)}`);
