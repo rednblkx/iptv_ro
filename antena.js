@@ -2,7 +2,7 @@ const { default: axios } = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs");
 const path = require('path');
-const { curly } = require('node-libcurl')
+
 channels = [
   "antena1",
   "happy-channel",
@@ -388,35 +388,41 @@ async function login() {
     if(consoleL) console.log("antena| login: getting auth.json file");
     let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
     if(consoleL && auth) console.log("antena| login: auth.json valid");
-    let tokens = await curly.get("https://antenaplay.ro/intra-in-cont", {
-      httpHeader: [
-        "accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "upgrade-insecure-requests: 1",
-      ],
-      userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",   });
-    let $ = cheerio.load(tokens.data);
-    const login = await curly.post('https://antenaplay.ro/intra-in-cont', {
-      postFields: `email=${encodeURIComponent(auth.antena.username)}&password=${encodeURIComponent(auth.antena.password)}&_token=${$("input[name=_token]").val()}`,
-      httpHeader: [
-        'Content-Type: application/x-www-form-urlencoded',
-        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Origin: https://www.digionline.ro',
-  
-      ],
-      referer: "https://antenaplay.ro/intra-in-cont",
-      cookie: tokens.headers[0]["Set-Cookie"].map((a) => a.match(/[^;]*/)[0]).join(";"),
-      userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",
-    })
-    let live = await curly.get("https://antenaplay.ro/live/antena1", {
-      httpHeader: [
-        "accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "upgrade-insecure-requests: 1",
-      ],
-      userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",
-      cookie: login.headers[0]["Set-Cookie"].map((a) => a.match(/[^;]*/)[0]).join(";")
+    let tokens = await axios.get("https://antenaplay.ro/intra-in-cont", {
+      headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Origin': 'https://antenaplay.ro',
+          referer: "https://antenaplay.ro",
+          'user-agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",
+      },
     });
-    console.log(live.headers[0]["Set-Cookie"]);
-    auth.antena.cookies = live.headers[0]["Set-Cookie"].map((a) => a.match(/[^;]*/)[0])
+    let $ = cheerio.load(tokens.data);
+      const login = await axios.post(
+          'https://antenaplay.ro/intra-in-cont', 
+      `email=${encodeURIComponent(auth.antena.username)}&password=${encodeURIComponent(auth.antena.password)}&_token=${$("input[name=_token]").val()}`, 
+      {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Origin': 'https://antenaplay.ro',
+        referer: "https://antenaplay.ro/intra-in-cont",
+        cookie: tokens.headers["set-cookie"].map((a) => a.match(/[^;]*/)[0]).join(";"),
+        'user-agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36",
+      },
+      maxRedirects: 0,
+      validateStatus: (status) => status === 302
+    })
+    let live = await axios.get("https://antenaplay.ro/live/antena1", {
+      headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Origin': 'https://antenaplay.ro',
+          referer: "https://antenaplay.ro",
+          cookie: login.headers["set-cookie"].map((a) => a.match(/[^;]*/)[0]).join(";"),
+          'user-agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36"
+      },
+    });
+    auth.antena.cookies = live.headers["set-cookie"].map((a) => a.match(/[^;]*/)[0])
     fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
     if (auth.antena.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))) {
       if(consoleL) console.log("antena| login: cookies found ");
