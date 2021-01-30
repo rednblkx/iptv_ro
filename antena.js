@@ -11,6 +11,9 @@ channels = [
   "antena3",
   "mireasa",
   "antena-international",
+  "comedy-play",
+  "antena-monden",
+  "cookplay"
 ];
 var stream = {};
 let consoleL = false;
