@@ -13,6 +13,88 @@ var channels = {
     id: 30,
     category: "general",
   },
+  "tvr": {
+    id: 24,
+    category: "general",
+  },
+  "digi-life": {
+    id: 6,
+    category: "general",
+  },
+  "tv-paprika": {
+    id: 39,
+    category: "general",
+  },
+  "travel-mix": {
+    id: 74,
+    category: "general",
+  },
+
+  "eurosport-1": {
+    id: 31,
+    category: "general",
+  },
+  "eurosport-2": {
+    id: 32,
+    category: "general",
+  },
+
+  "romania-tv": {
+    id: 27,
+    category: "general",
+  },
+  "slager-tv": {
+    id: 93,
+    category: "general",
+  },
+  "e-entertainement": {
+    id: 73,
+    category: "general",
+  },
+
+  "tvr2": {
+    id: 38,
+    category: "general",
+  },
+  "cbs": {
+    id: 65,
+    category: "general",
+  },
+  "fishing-and-hunting": {
+    id: 92,
+    category: "general",
+  },
+  "hgtv": {
+    id: 103,
+    category: "general",
+  },
+
+  "digi-sport-1-digionline": {
+    id: 1,
+    category: "sport",
+  },
+  "digi-sport-2-digionline": {
+    id: 2,
+    category: "sport",
+  },
+  "digi-sport-3-digionline": {
+    id: 3,
+    category: "sport",
+  },
+  "travel-channel": {
+    id: 21,
+    category: "sport",
+  },
+
+  "digi-sport-4-digionline": {
+    id: 49,
+    category: "sport",
+  },
+  "cinethronix": {
+    id: 101,
+    category: "sport",
+  },
+
   "film-cafe": {
     id: 94,
     category: "filme",
@@ -25,7 +107,7 @@ var channels = {
     id: 58,
     category: "filme",
   },
-  "paramount-channel": {
+  "teennick": {
     id: 111,
     category: "filme",
   },
@@ -137,6 +219,27 @@ var channels = {
     id: 41,
     category: "tematice",
   },
+  "viasat-explorer": {
+    id: 40,
+    category: "tematice",
+  },
+  "viasat-nature": {
+    id: 42,
+    category: "tematice",
+  },
+  "nat-geo-wild": {
+    id: 33,
+    category: "tematice",
+  },
+  "cnn": {
+    id: 63,
+    category: "tematice",
+  },
+  "tv5": {
+    id: 48,
+    category: "tematice",
+  },
+ 
   "bbc-earth": {
     id: 67,
     category: "tematice",
