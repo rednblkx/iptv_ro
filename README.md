@@ -3,7 +3,9 @@
 ```
 /:channel --> Live feed of tv channel (see antena.js file for channel IDs)
 
-/shows --> List of all the tv shows
+/shows --> List of all the TV Series
+
+/ems --> List of TV Shows
 
 /show/:showid --> Year & Month Selector for :showid episodes
 
