@@ -1,7 +1,7 @@
 ## API Endpoints
 ### APlay
 ```
-/:channel --> Live feed of tv channel (see antena.js file for channel IDs)
+/:channel(?ts=1) --> Live feed of tv channel (see antena.js file for channel IDs)
 
 /shows --> List of all the TV Series
 
