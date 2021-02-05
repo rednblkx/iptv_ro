@@ -32,6 +32,10 @@ app.post('/login',express.urlencoded({extended: false}), (req,res) => {
     }
 })
 //AntenaP
+app.get('/:channel\.m3u8', ({next}) => {
+    // req.params.channel = req.params.channel.match('(.*).m3u8')[1]
+    next();
+})
 app.get('/:channel', live);
 app.get('/shows',async (req,res) => {
     try {
