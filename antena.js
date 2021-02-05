@@ -98,6 +98,34 @@ exports.shows = async function getShowsRoute() {
   })
 
 }
+exports.tvantena = async function getEmsRoute(page) {
+  return new Promise(async (resolve,reject) => {
+    try {
+      if(consoleL) console.log("antena| shows: Getting HTML code");
+      let html = await getEms(page || "1");
+      if(consoleL && html) console.log("antena| shows: Got HTML");
+      let $ = cheerio.load("<html><head><script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'/><title>Shows</title></head><body></body></html>");
+      $("body").append("<ul></ul>");
+      $("body").append(`
+      <script>
+        function nextPage(){
+          window.location.href = window.location.href.match("page") ? window.location.href.match(/[^=]*/)[0] + "=" + (Number(location.search.match(/\\?page=(\\d)/)[1]) + 1) : "?page=" + 2
+        }
+      </script>`)
+      $('body').append(`<button onClick="nextPage()">Next Page</button>`)
+      html.forEach((el) => {
+        if(consoleL) console.log(`antena| shows: Appending show ${el.name}`);
+        if(consoleL) console.log(`antena| shows: Appending show link ${el.link}`);
+        if(consoleL) console.log(`antena| shows: Appending show img ${el.img}`);
+        $("ul").append(`<li><a href=${el.link}><img src=${el.img} width=100px><br><span>${el.name}</span></a></li>`);
+      });
+      resolve($.html());
+    } catch (error) {
+      reject(`antena| getEmsRoute: ${error}`);
+    }
+  })
+
+}
 async function getEpisode(show, epid) {
   return new Promise(async (resolve, reject) => {
   try {
@@ -204,6 +232,48 @@ async function getShows() {
     }
   });
 }
+async function getEms(page) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if(consoleL) console.log("antena| getShows: Getting cookies");
+      let auth = await getLogin();
+      if(consoleL && auth) console.log("antena| getShows: Got cookies");
+      if(consoleL) console.log("antena| getShows: Getting HTML");
+      let pages = await axios.get(`https://antenaplay.ro/emisiuni-tv/load?channel=1&page=1`,
+      {
+        headers: {
+          referer: "https://antenaplay.ro/antena1",
+          "x-newrelic-id": "VwMCV1VVGwEEXFdQDwIBVQ==",
+          "x-requested-with": "XMLHttpRequest",
+          'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36",
+        }
+      })      
+      let html = await axios.get(`https://antenaplay.ro/emisiuni-tv/load?channel=1&page=${page <= pages.data.pagination.total_pages && page || pages.data.pagination.total_pages}`,
+      {
+        headers: {
+          referer: "https://antenaplay.ro/antena1",
+          "x-newrelic-id": "VwMCV1VVGwEEXFdQDwIBVQ==",
+          "x-requested-with": "XMLHttpRequest",
+          'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36",
+        }
+      })
+      if(consoleL && html.data) console.log("antena| getEms: Got HTML");
+      if(consoleL) console.log("antena| getEms: loading into cheerio");
+      let $ = cheerio.load(html.data.view);
+      let shows = [];
+      $("a").each((i, el) => shows.push({
+        name: $(el).children(".text-container").children('h5').text(),
+        link: '/show' + $(el).attr("href"),
+        img: $(el).children(".container").children('img').attr('src')
+      }));
+      shows.length !== 0 ? resolve(shows) : reject("antena| getShows: No List");
+    } catch (error) {
+      reject(`antena| getEms: ${error}`);
+      if(consoleL)
+        console.error(error);
+    }
+  });
+}
 async function fetchLinkShow(
   url,
   year = new Date().getFullYear(),
@@ -237,6 +307,7 @@ async function fetchLinkShow(
       if(consoleL && response.data) console.log("antena| fetchLinkShow: Got Episodes");
       var $ = cheerio.load(response.data.view);
       $("a").each((i, url) => {
+        $(url).prepend($($(url).children('.container').children('img')).attr("width", "200px")) 
         $(url).attr("href", "/show/play" + $(url).attr("href"));
       });
       $(".container").each((i, el) => $(el).remove());
@@ -276,24 +347,58 @@ async function getShow(show, year, month) {
     if(consoleL && html.data) console.log("antena| getShow: Got HTML");
     if(consoleL) console.log("antena| getShow: loading into cheerio");
     let $ = cheerio.load(await html.data);
-    let $$ = cheerio.load("<html><head><title>Selector</title></head><body></body></html>");
+    let $$ = cheerio.load("<html><head><script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'/><title>Selector</title></head><body></body></html>");
     $$('body').append("<h1>Month</h1>");
-    $$("body").append(`<select id="month"></select>`)
-      if($("#js-selector-month option:not([disabled])").length){
-        $("#js-selector-month option:not([disabled])").each((i, el) => {
-          $$("#month").append(`<option value=${$(el).val()}>${$(el).text()}</option>`);
-        });
-      }else $$("#month").append(`<option selected value=${$("#js-selector-month option:not([disabled])").val()}>${$("#js-selector-month option:not([disabled])").text()}</option>`)
+    $$('body').append(`
+    <script>
+      $( document ).ready(function() {
+        $("#year").on("change", function() {
+          var t = $(this).find("option:selected"),
+          e = t.data("months").split(";");
+          $("#month option").each(function() {
+            $.inArray($(this).val(), e) >= 0 ? $(this).prop("disabled", !1) : $(this).prop("disabled", !0)
+          }), $("#month option:enabled").eq(0).prop("selected", !0)
+        })
+        var t = $("#year").find("option:selected"),
+                e = t.data("months").split(";");
+            $("#month option").each(function() {
+                $.inArray($(this).val(), e) >= 0 ? $(this).prop("disabled", !1) : $(this).prop("disabled", !0)
+            }), $("#month option:enabled").eq(0).prop("selected", !0)
+      });
+    </script>
+    `);
+    $$('body')
+      $$('body').append(`<select id="month" data-month="true">
+      <option selected="" disabled="" class="option">Luna</option> 
+      <option value="01" class="option" disabled="">Ianuarie</option>
+      <option value="02" class="option" disabled="">Februarie</option>
+      <option value="03" disabled="" class="option">Martie</option>
+      <option value="04" disabled="" class="option">Aprilie</option>
+      <option value="05" disabled="" class="option">Mai</option>
+      <option value="06" disabled="" class="option">Iunie</option>
+      <option value="07" disabled="" class="option">Iulie</option>
+      <option value="08" disabled="" class="option">August</option>
+      <option value="09" disabled="" class="option">Septembrie</option>
+      <option value="10" disabled="" class="option">Octombrie</option>
+      <option value="11" class="option">Noiembrie</option>
+      <option value="12" class="option">Decembrie</option>       
+    </select>`)
     $$('body').append("<h1>Year</h1>")
     $$("body").append(`<select id="year"></select>`);
-      if($("#js-selector-year option:not([disabled])").length){
+      if($("#js-selector-year option:not([disabled])").length > 0){
         $("#js-selector-year option:not([disabled])").each((i, el) => {
-          $$("#year").append(`<option value=${$(el).val()}>${$(el).text()}</option>`);
+          $$("#year").append(`<option data-months=${$(el).attr('data-months')} value=${$(el).val()}>${$(el).text()}</option>`);
         })
-      }else $$("#year").append(`<option selected value=${$("#js-selector-year option:not([disabled])").val()}>${$("#js-selector-year option:not([disabled])").text()}</option>`)
+      }else $$("#year").append(`<option selected data-months=${$("#js-selector-year option:not([disabled])").attr('data-months')} value=${$("#js-selector-year option:not([disabled])").val()}>${$("#js-selector-year option:not([disabled])").text()}</option>`)
       $$($$('#month > option')[$$('#month > option').length - 1]).attr('selected',true);
       $$($$('#year > option')[$$('#year > option').length - 1]).attr('selected',true);
-      $$("body").append(`<button onclick="window.location.href='${"?year=" + $$("#year > option").val() + "&month=" + $$("#month > option").val()}'">Submit</button>`)
+      $$('body').append(`
+      <script>
+        function select(){
+          window.location.href='?year=' + document.querySelector('#year').value + '&month=' + document.querySelector('#month').value
+        }
+      </script>`)
+      $$("body").append(`<button onclick="select()">Submit</button>`)
       !year || !month ? resolve($$.html()) : $ ? resolve(await fetchLinkShow(
         "https://antenaplay.ro" +
           $(".js-slider-button.slide-right").attr("data-url"),year, month
