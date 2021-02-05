@@ -24,13 +24,48 @@ function Cookie(name, value) {
 Cookie.prototype.toString = function CookietoString() {
   return `${this.name}=${this.value}`;
 };
+function m3uParse(data, quality) {
+  let line;
+  var m3u = data.split("\n").filter(function (str) {
+    return str.length > 0;
+  });
+  while ((line = m3u.shift())) {
+    if (
+      (line.includes(".m3u8") && (line.includes(['3000k','1400k','600k'].includes(quality) ? quality : "3000k")))
+    ) {
+      return line;
+    }
+  }
+}
+function m3uFixURL(m3u, url) {
+  m3u = m3u.split("\n");
+  m3u.forEach((el, index, array) => {
+    if (el.match('URI="(.*)"') != null) {
+      array[index] = el.replace(
+        el.match('"(.*).key"')[0],
+        '"' + url + el.match('URI="(.*)"')[1] + '"'
+      );
+    }
+    if (el.match("(.*).ts") != null) {
+      array[index] = url + el;
+    }
+  });
+  return m3u.join("\n");
+}
 exports.live = async (req, res, next) => {
+  if (req.params.channel.match("(.*).m3u8"))
+  req.params.channel = req.params.channel.match("(.*).m3u8")[1];
   try {
     if (channels.includes(req.params.channel)) {
       if (stream[req.params.channel] != undefined) {
         if(consoleL) console.log("antena| live: cached URL");
         if(consoleL) console.log(`antena| live: URL used: ${stream[req.params.channel]}`);
-        res.redirect(stream[req.params.channel]);
+        if(req.query.ts === "1"){
+          res.contentType("application/vnd.apple.mpegurl")
+          let m3u8 = await axios.get(stream[req.params.channel])
+          let qu = await axios.get(m3uParse(m3u8.data, "3000k"))
+          res.send(m3uFixURL(qu.data, qu.config.url.match("(.*)\/")[0]))
+        }else res.redirect(stream[req.params.channel]);
       } else {
         let url = await getStream(req.params.channel);
         if(consoleL) console.log("antena| live: getting stream URL");
@@ -38,7 +73,12 @@ exports.live = async (req, res, next) => {
         if(consoleL) console.log(`antena| live: URL used: ${url}`);
         stream[req.params.channel] = url;
         setTimeout(() => {delete stream[req.params.channel];if(consoleL) console.log("antena| live: Timeout set");}, 2.16e+7);
-        res.redirect(url);
+        if(req.query.ts === "1"){
+          res.contentType("application/vnd.apple.mpegurl")
+          let m3u8 = await axios.get(url)
+          let qu = await axios.get(m3uParse(m3u8.data, "3000k"))
+          res.send(m3uFixURL(qu.data, qu.config.url.match("(.*)\/")[0]))
+        }else res.redirect(url);
       }
     } else next();
   } catch (error) {
