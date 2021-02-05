@@ -4,7 +4,7 @@ const port = 3000;
 const {digi} = require('./digionline');
 const {pro} = require('./protv');
 const fs = require('fs')
-const {live, showid, shows, episode} = require('./antena');
+const {live, showid, shows, episode, tvantena} = require('./antena');
 const path = require('path')
 app.get('/login', (req,res) => {
     res.sendFile(path.join(__dirname, './public', 'login.html'))
@@ -36,6 +36,13 @@ app.get('/:channel', live);
 app.get('/shows',async (req,res) => {
     try {
         res.send(await shows());
+    } catch (error) {
+        res.status(505);
+    }
+});
+app.get('/ems',async (req,res) => {
+    try {
+        res.send(await tvantena(req.query.page));
     } catch (error) {
         res.status(505);
     }
