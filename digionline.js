@@ -360,8 +360,9 @@ async function getFromDigi(id, name, category) {
       );
       if(consoleL && play) console.log("digi| getFromDigi: got the stream");
       resolve(play);
+      if(play.data.stream_url && !ch[name])
+        setTimeout(() => { delete ch[name] }, 2.16e+7)
       // .then((stream) => {
-      // setTimeout(() => { delete channels[req.params.channel] }, 2.16e+7)
       // stream.data.stream_url ? callback(stream.data.stream_url) : callback(0);
       // });
     } catch (error) {
