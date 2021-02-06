@@ -2,7 +2,7 @@ const { default: axios } = require("axios");
 const fs = require("fs");
 const path = require('path');
 
-let consoleL = false;
+let consoleL = process.env.DEBUG;
 
 var ch = {};
 
@@ -361,7 +361,7 @@ async function getFromDigi(id, name, category) {
       if(consoleL && play) console.log("digi| getFromDigi: got the stream");
       resolve(play);
       if(play.data.stream_url && !ch[name])
-        setTimeout(() => { delete ch[name] }, 2.16e+7)
+        setTimeout(() => { delete ch[name] }, 1.08e+7)
       // .then((stream) => {
       // stream.data.stream_url ? callback(stream.data.stream_url) : callback(0);
       // });
@@ -442,8 +442,14 @@ exports.digi = async (req, res, next) => {
             req.params.channel,
             channels[req.params.channel].category
           );
+          if(consoleL) console.log("digi| digi: using cache with MPEGTS playlist");
+          if(consoleL) console.log(`digi| digi: ${ch[req.params.channel]}`);
           let m3u8 = await axios.get(url.data ? url.data.stream_url : url);
+          if(consoleL && m3u8.data) console.log(`digi| digi: cached URL ${url.data ? url.data.stream_url : url}`);
+          if(consoleL && m3u8.data) console.log(`digi| digi: cached URL qualities M3U8 ${m3u8.data}`);
+          if(consoleL && m3u8.data) console.log(`digi| digi: cached selected quality URL ${(url.data ? url.data.stream_url : url).match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality)}`);
           let quality = url.data ? await axios.get((url.data ? url.data.stream_url : url).match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality)) : undefined;
+          if(consoleL && m3u8.data) console.log(`digi| digi: cached selected quality M3U8 ${url.data ? quality.data : m3u8.data}`);
           res.set("Content-Type", "application/vnd.apple.mpegurl");
           res.send(m3uFixURL(
             url.data ? quality.data : m3u8.data,
@@ -454,6 +460,15 @@ exports.digi = async (req, res, next) => {
               m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq")
             ).match("(.*)/(.*).m3u8")[1] + "/" : url.match("(.*)/(.*).m3u8")[1] + '/'
           ));
+          if(consoleL) console.log(`digi| digi: cached response sent ${m3uFixURL(
+            url.data ? quality.data : m3u8.data,
+            url.data ?
+            (
+              (url.data ? url.data.stream_url : url).match("(.*)/(.*).m3u8")[1] +
+              "/" +
+              m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq")
+            ).match("(.*)/(.*).m3u8")[1] + "/" : url.match("(.*)/(.*).m3u8")[1] + '/'
+          )}`)
         }else{
           if(consoleL) console.log("digi| digi: using cache with MPEGTS playlist");
           if(consoleL) console.log(`digi| digi: ${ch[req.params.channel]}`);
