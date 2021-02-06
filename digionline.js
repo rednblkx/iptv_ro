@@ -469,22 +469,7 @@ exports.digi = async (req, res, next) => {
             )
           );
         }
-      }else if (ch[req.params.channel] && (!req.query.ts || req.query.ts === '0')) {
-        if(req.query.quality){
-          let url = await getFromDigi(
-            channels[req.params.channel].id,
-            req.params.channel,
-            channels[req.params.channel].category
-          );
-          let m3u8 = await axios.get(url.data.stream_url);
-          res.redirect(url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality))
-        }else{
-          if(consoleL) console.log("digi| digi: using cache without MPEGTS playlist");
-          if(consoleL) console.log(`digi| digi: ${ch[req.params.channel]}`);
-          if(consoleL) console.log(`digi| digi: cached original URL ${ch[req.params.channel]}`);
-          res.redirect(ch[req.params.channel]);
-        }
-      } else {
+      }else {
         try {
           if(consoleL) console.log("digi| digi: getting from digi");
           let url = await getFromDigi(
@@ -557,20 +542,6 @@ exports.digi = async (req, res, next) => {
               quality.config.url.match("(.*)/(.*).m3u8")[1] + "/"
             )
           );
-        }
-      } else if(ch[req.params.channel] && (!req.query.ts || req.query.ts === "0")){
-        try {
-          if(req.query.quality){
-            if(consoleL) console.log(`digi| digi: redirecting`);
-            if(consoleL) console.log(`digi| digi: selected quality ${req.query.quality}`);
-            let c24 = await axios.get(ch[req.params.channel]);
-            res.redirect(ch[req.params.channel].match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(c24.data, req.query.quality));
-          }else{
-            if(consoleL) console.log(`digi| digi: redirecting`);
-            res.redirect(ch[req.params.channel]);
-          }
-        } catch (error) {
-          res.status(500).send(error);
         }
       } else if(req.query.ts === "1"){
         if(req.query.quality){
