@@ -2,7 +2,7 @@ const { default: axios } = require("axios");
 const fs = require("fs");
 const path = require('path');
 
-let consoleL = false;
+let consoleL = process.env.DEBUG;
 
 var ch = {};
 
@@ -488,8 +488,10 @@ exports.digi = async (req, res, next) => {
           if(req.query.ts == '1'){
             let m3u8 = await axios.get(url.data.stream_url);
             if(consoleL && m3u8.data) console.log(`digi| digi: Original M3U8 ${m3u8.data}`);
-            ch[req.params.channel] =
-              url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq");
+            if(req.query.cached == '1'){
+              ch[req.params.channel] =
+                url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq");
+            }
             let m3u8_quality = await axios.get(
               url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq")
             );
@@ -548,7 +550,9 @@ exports.digi = async (req, res, next) => {
           if(consoleL) console.log("digi| digi: using live");
           let video = await getFrom24(req.params.channel);
           let c24 = axios.get(video.data.file);
-          ch[req.params.channel] = video.data.file;
+          if(req.query.cached == '1'){
+            ch[req.params.channel] = video.data.file;
+          }
           let quality = await axios.get(video.data.file.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(c24.data, req.query.quality));
           if(consoleL) console.log(`digi| digi: selected quality ${req.query.quality}`);
           if(consoleL) console.log(`digi| digi: original M3U8 ${quality.data}`);
@@ -577,16 +581,19 @@ exports.digi = async (req, res, next) => {
         }
       } else {
         if(req.query.quality){
-          if(consoleL) console.log("digi| digi: using live");
+          if(consoleL) console.log("digi| ch24: using live");
           let video = await getFrom24(req.params.channel);
           let c24 = await axios.get(video.data.file);
           ch[req.params.channel] = video.data.file;
-          if(consoleL) console.log(`digi| digi: original M3U8 ${c24.data}`);
-          if(consoleL) console.log(`digi| digi: rewrited M3U8 ${m3uFixURL(c24.data, c24.config.url.match("(.*)/(.*).m3u8")[1] + "/")}`);
+          if(consoleL) console.log(`digi| ch24: original M3U8 ${c24.data}`);
+          if(consoleL) console.log(`digi| ch24: rewrited M3U8 ${m3uFixURL(c24.data, c24.config.url.match("(.*)/(.*).m3u8")[1] + "/")}`);
+          if(consoleL) console.log(`digi| ch24: response ${JSON.stringify(video.data)}`);
+          if(consoleL) console.log(`digi| ch24: selected quality M3U8 ${video.data.file.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(c24.data, req.query.quality)}`);
           res.redirect(video.data.file.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(c24.data, req.query.quality))
         }else{
-          if(consoleL) console.log("digi| digi: using live");
+          if(consoleL) console.log("digi| ch24: using live");
           let video = await getFrom24(req.params.channel);
+          if(consoleL) console.log(`digi| ch24: response ${JSON.stringify(video.data)}`);
           ch[req.params.channel] = video.data.file;
           res.redirect(video.data.file)
         }
