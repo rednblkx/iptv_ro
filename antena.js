@@ -16,7 +16,7 @@ channels = [
   "cookplay"
 ];
 var stream = {};
-let consoleL = false;
+let consoleL = process.env.DEBUG;
 function Cookie(name, value) {
   this.name = name;
   this.value = value;
