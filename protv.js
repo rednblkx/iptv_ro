@@ -10,7 +10,7 @@ const channels = {
     "pro-gold": 4,
     "pro-cinema": 5
 };
-var consoleL = false;
+var consoleL = process.env.DEBUG;
 async function login() {
     return new Promise(async (resolve, reject) => {
         try {
