@@ -1,8 +1,9 @@
 const { default: axios } = require("axios");
 const fs = require("fs");
 const path = require('path');
+const http2 = require('http2');
 
-let consoleL = false;
+let consoleL = process.env.DEBUG;
 
 var ch = {};
 
@@ -290,36 +291,54 @@ async function getLogin() {
     }
   });
 }
-async function login() {
+async function login(cookies) {
   let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
+  if(consoleL && cookies) console.log('digi| login: reusing cookies');
+  if(consoleL && cookies) console.log(`digi| login: ${cookies}`);
+  console.log(`form-login-email=${encodeURIComponent(auth.digi.username)}&form-login-password=${encodeURIComponent(auth.digi.password)}`)
   return new Promise(async (resolve, reject) => {
     try {
-      let log = await axios.post(
-        'https://www.digionline.ro/auth/login', 
-        `form-login-email=${encodeURIComponent(auth.digi.username)}&form-login-password=${encodeURIComponent(auth.digi.password)}&sbm=`, 
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Origin': 'https://www.digionline.ro',
-            'User-Agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Safari/537.36"
-          },
-          maxRedirects: 0,
-          validateStatus: (status) => status === 302
-        })
-        auth.digi.cookies = [];
-        log.headers['set-cookie'].forEach(cookie => {
-          auth.digi.cookies.push(cookie.match(/[^;]*/)[0]);
+      const client = http2.connect('https://www.digionline.ro:443');
+
+        const buffer = new Buffer.from(`form-login-email=${encodeURIComponent(auth.digi.username)}&form-login-password=${encodeURIComponent(auth.digi.password)}`);
+
+        const req = client.request({
+            [http2.constants.HTTP2_HEADER_SCHEME]: "https",
+            [http2.constants.HTTP2_HEADER_METHOD]: http2.constants.HTTP2_METHOD_POST,
+            [http2.constants.HTTP2_HEADER_PATH]: `/auth/login`,
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Length": buffer.length,
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36",
+            "Cookie": cookies.join("; ")
         });
-        fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
-        if (
-          auth.digi.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))
-        ) {
-        if(consoleL) console.log("digi| login: cookies found");
-          resolve(auth.digi.cookies);
-        } else {
-          reject("Something went wrong while signing in");
-        }
+
+        req.setEncoding('utf8');
+        req.on('response', (headers, flags) => {
+            auth.digi.cookies = cookies && auth.digi.cookies ? auth.digi.cookies.filter(a => !a.includes("DOSESSV3PRI")) : [];
+            if(consoleL) console.log(`digi| login: got status ${headers[":status"]}`)
+            if(consoleL) console.log(`digi| login: got cookies ${headers["set-cookie"]}`)
+            try {
+                if(headers[":status"] === 302){
+                    headers['set-cookie'].forEach(cookie => {
+                        auth.digi.cookies.push(cookie.match(/[^;]*/)[0]);
+                    });
+                    fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
+                    if (
+                        auth.digi.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))
+                    ) {
+                        if(consoleL) console.log("digi| login: cookies found");
+                        resolve(auth.digi.cookies);
+                    } else {
+                        reject("Something went wrong while signing in");
+                    }
+                } else throw "Username/Password incorrect or max devices registered reached"
+            } catch(error){
+                reject(error);
+                if(consoleL) console.log(`digi| login: ${error}`);
+            }
+        });
+        req.write(buffer);
+        req.end();
     } catch (error) {
       reject("digi| login: " + error);
       if(consoleL)
@@ -366,7 +385,10 @@ async function getFromDigi(id, name, category) {
       // stream.data.stream_url ? callback(stream.data.stream_url) : callback(0);
       // });
     } catch (error) {
-      reject(error);
+        let auth = await getLogin();
+        login(auth).then(() => {
+            getFromDigi(id, name, category).then(stream => resolve(stream)).catch(er => reject(er))
+        }).catch(er => reject(er))
       if(consoleL)
         console.error(error);
     }
