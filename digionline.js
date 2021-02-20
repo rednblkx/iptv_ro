@@ -309,7 +309,7 @@ async function login(cookies) {
             "Content-Type": "application/x-www-form-urlencoded",
             "Content-Length": buffer.length,
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36",
-            "Cookie": cookies.join("; ")
+            "Cookie": cookies ? cookies.join("; ") : null
         });
 
         req.setEncoding('utf8');
