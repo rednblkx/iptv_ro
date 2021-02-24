@@ -1,4 +1,4 @@
-##Disclaimer
+## Disclaimer
 This script is not officially commissioned/supported by DIGI, Antena or ProTV. 
 For more information about digionline, antenaplay or protvplus, visit their official website.
 
