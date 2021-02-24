@@ -1,3 +1,13 @@
+##Disclaimer
+This script is not officially commissioned/supported by DIGI, Antena or ProTV. 
+For more information about digionline, antenaplay or protvplus, visit their official website.
+
+This script offers a way to retrieve the streams using the credentials PROVIDED BY YOU.
+
+THIS SCRIPT DOES NOT OFFER FREE IPTV.
+
+THERE IS NO WARRANTY FOR THE SCRIPT, IT MIGHT NOT WORK AT ALL AND IT CAN BREAK AND STOP WORKING AT ANY TIME.
+
 ## API Endpoints
 ### APlay
 ```
