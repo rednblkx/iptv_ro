@@ -582,10 +582,10 @@ exports.streamDigi = async (req, res, next) => {
               // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
               // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
               // url != 0 ? res.redirect(url) : res.status(404)
-              if(req.query.quality){
+              if(req.query.quality && channels[req.params.channel].drm !== "y"){
                 let m3u8 = await axios.get(url.data.stream_url);
                 res.redirect(url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq"));
-              }else res.redirect(url.data.stream_url) 
+              }else channels[req.params.channel].drm === "y" ? res.json(`{"manifestUrl": "${url.data['stream.manifest.url']}","wproxy": "${url.data['widevine.proxy']}"}`) : res.redirect(url.data.stream_url) 
             } catch (error) {
               res.status(400).send(error)
             }
@@ -640,7 +640,7 @@ exports.streamDigi = async (req, res, next) => {
                   )
                 );
               }
-            }else {
+            }else if(channels[req.params.channel].drm !== "y") {
               if(consoleL) console.log("digi| digi: getting from digi");
               let url = await getFromDigi(
                 channels[req.params.channel].id,
@@ -690,10 +690,10 @@ exports.streamDigi = async (req, res, next) => {
               // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
               // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
               // url != 0 ? res.redirect(url) : res.status(404)
-              if(req.query.quality){
+              if(req.query.quality && channels[req.params.channel].drm !== "y"){
                 let m3u8 = await axios.get(url.data.stream_url);
                 res.redirect(url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq"));
-              }else res.redirect(url.data.stream_url) 
+              }else channels[req.params.channel].drm === "y" ? res.json({"manifestUrl": url.data.data.content['stream.manifest.url'],"wproxy": url.data.data.content['widevine.proxy']}) : res.redirect(url.data.stream_url) 
             } catch (error) {
               res.status(400).send(error)
             }
