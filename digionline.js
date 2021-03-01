@@ -2,6 +2,7 @@ const { default: axios } = require("axios");
 const fs = require("fs");
 const path = require('path');
 const http2 = require('http2');
+const cheerio = require('cheerio');
 
 let consoleL = process.env.DEBUG;
 
@@ -295,7 +296,7 @@ async function login(cookies) {
   let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
   if(consoleL && cookies) console.log('digi| login: reusing cookies');
   if(consoleL && cookies) console.log(`digi| login: ${cookies}`);
-  console.log(`form-login-email=${encodeURIComponent(auth.digi.username)}&form-login-password=${encodeURIComponent(auth.digi.password)}`)
+  // console.log(`form-login-email=${encodeURIComponent(auth.digi.username)}&form-login-password=${encodeURIComponent(auth.digi.password)}`)
   return new Promise(async (resolve, reject) => {
     try {
       const client = http2.connect('https://www.digionline.ro:443');
@@ -312,13 +313,13 @@ async function login(cookies) {
             "Cookie": cookies.join("; ")
         });
 
-        req.setEncoding('utf8');
         req.on('response', (headers, flags) => {
             auth.digi.cookies = cookies && auth.digi.cookies ? auth.digi.cookies.filter(a => !a.includes("DOSESSV3PRI")) : [];
             if(consoleL) console.log(`digi| login: got status ${headers[":status"]}`)
             if(consoleL) console.log(`digi| login: got cookies ${headers["set-cookie"]}`)
             try {
                 if(headers[":status"] === 302){
+                  console.log(headers);
                     headers['set-cookie'].forEach(cookie => {
                         auth.digi.cookies.push(cookie.match(/[^;]*/)[0]);
                     });
@@ -331,14 +332,25 @@ async function login(cookies) {
                     } else {
                         reject("Something went wrong while signing in");
                     }
-                } else throw "Username/Password incorrect or max devices registered reached"
+                } else if(headers[':status'] === 200){
+                  if(consoleL) console.log(`digi| login: Something went wrong`);
+                } 
+                // throw "Username/Password incorrect or max devices registered reached"
             } catch(error){
                 reject(error);
                 if(consoleL) console.log(`digi| login: ${error}`);
             }
         });
+        req.setEncoding('utf8');
+        let data = [];
+        req.on('data', (chunk) => { data.push(chunk); });
         req.write(buffer);
         req.end();
+        req.on('end', () => {
+          let $ = cheerio.load(data.join());
+          reject($('.form-element.error').text().trim())
+          client.close();
+        });
     } catch (error) {
       reject("digi| login: " + error);
       if(consoleL)
