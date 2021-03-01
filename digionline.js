@@ -13,262 +13,359 @@ var ch24 = ["digi24", "digisport1", "digisport2", "digisport3", "digisport4"];
 var channels = {
   "kanal-d": {
     id: 30,
+    drm: "n", 
     category: "general",
   },
   "tvr": {
     id: 24,
+    drm: "n", 
     category: "general",
   },
   "digi-life": {
     id: 6,
+    drm: "n", 
     category: "general",
   },
   "tv-paprika": {
     id: 39,
+    drm: "n", 
     category: "general",
   },
   "travel-mix": {
     id: 74,
+    drm: "n", 
     category: "general",
   },
-
+  "digi24":{
+    id: 4,
+    category: "stiri",
+    drm: "n"
+  },
   "eurosport-1": {
     id: 31,
+    drm: "n", 
     category: "general",
   },
   "eurosport-2": {
     id: 32,
+    drm: "n", 
     category: "general",
   },
 
   "romania-tv": {
     id: 27,
+    drm: "n", 
     category: "general",
   },
   "slager-tv": {
     id: 93,
+    drm: "n", 
     category: "general",
   },
   "e-entertainement": {
     id: 73,
+    drm: "n", 
     category: "general",
   },
 
   "tvr2": {
     id: 38,
+    drm: "n", 
     category: "general",
   },
   "cbs": {
     id: 65,
+    drm: "n", 
     category: "general",
   },
   "fishing-and-hunting": {
     id: 92,
+    drm: "n", 
     category: "general",
   },
   "hgtv": {
     id: 103,
+    drm: "n", 
     category: "general",
   },
 
-  "digi-sport-1-digionline": {
+  "digisport1": {
     id: 1,
+    drm: "n", 
     category: "sport",
   },
-  "digi-sport-2-digionline": {
+  "digisport2": {
     id: 2,
+    drm: "n", 
     category: "sport",
   },
-  "digi-sport-3-digionline": {
+  "digisport3": {
     id: 3,
+    drm: "n", 
     category: "sport",
   },
   "travel-channel": {
     id: 21,
+    drm: "n", 
     category: "sport",
   },
 
   "digi-sport-4-digionline": {
     id: 49,
+    drm: "n", 
     category: "sport",
   },
   "cinethronix": {
     id: 101,
+    drm: "n", 
     category: "sport",
   },
 
   "film-cafe": {
     id: 94,
+    drm: "n", 
     category: "filme",
   },
   tnt: {
     id: 91,
+    drm: "n", 
     category: "filme",
   },
   "comedy-central": {
     id: 58,
+    drm: "n", 
     category: "filme",
   },
   "teennick": {
     id: 111,
+    drm: "n", 
     category: "filme",
   },
   "tv-1000": {
     id: 43,
+    drm: "n", 
     category: "filme",
   },
   axn: {
     id: 44,
+    drm: "n", 
     category: "filme",
   },
   amc: {
     id: 102,
+    drm: "n", 
     category: "filme",
   },
   diva: {
     id: 106,
+    drm: "n", 
     category: "filme",
   },
   "epic-drama": {
     id: 95,
+    drm: "n", 
     category: "filme",
   },
   "bollywood-tv": {
     id: 96,
+    drm: "n", 
     category: "filme",
   },
   "axn-black": {
     id: 45,
+    drm: "n", 
     category: "filme",
   },
   "axn-spin": {
     id: 57,
+    drm: "n", 
     category: "filme",
   },
   "axn-white": {
     id: 46,
+    drm: "n", 
     category: "filme",
   },
   cinemaraton: {
     id: 99,
+    drm: "n", 
     category: "filme",
   },
   "comedy-est": {
     id: 100,
+    drm: "n", 
     category: "filme",
   },
   nickelodeon: {
     id: 28,
+    drm: "n", 
     category: "copii",
   },
   "nick-jr": {
     id: 108,
+    drm: "n", 
     category: "copii",
   },
   minimax: {
     id: 37,
+    drm: "n", 
     category: "copii",
   },
   jimjam: {
     id: 105,
+    drm: "n", 
     category: "copii",
   },
   "nick-toons": {
     id: 109,
+    drm: "n", 
     category: "copii",
   },
   "disney-junior": {
     id: 18,
+    drm: "n", 
     category: "copii",
   },
   "disney-channel": {
     id: 17,
+    drm: "n", 
     category: "copii",
   },
   "davinci-learning": {
     id: 66,
+    drm: "n", 
     category: "copii",
   },
   "cartoon-network": {
     id: 89,
+    drm: "n", 
     category: "copii",
   },
   boomerang: {
     id: 90,
+    drm: "n", 
     category: "copii",
   },
   "digi-world": {
     id: 5,
+    drm: "n", 
     category: "tematice",
   },
   "discovery-channel": {
     id: 71,
+    drm: "n", 
     category: "tematice",
   },
   "history-channel": {
     id: 20,
+    drm: "n", 
     category: "tematice",
   },
   "national-geographic": {
     id: 19,
+    drm: "n", 
     category: "tematice",
   },
   tlc: {
     id: 72,
+    drm: "n", 
     category: "tematice",
   },
   "viasat-history": {
     id: 41,
+    drm: "n", 
     category: "tematice",
   },
   "viasat-explorer": {
     id: 40,
+    drm: "n", 
     category: "tematice",
   },
   "viasat-nature": {
     id: 42,
+    drm: "n", 
     category: "tematice",
   },
   "nat-geo-wild": {
     id: 33,
+    drm: "n", 
     category: "tematice",
   },
   "cnn": {
     id: 63,
+    drm: "n", 
     category: "tematice",
   },
   "tv5": {
     id: 48,
+    drm: "n", 
     category: "tematice",
   },
  
   "bbc-earth": {
     id: 67,
+    drm: "n", 
     category: "tematice",
   },
   "u-tv": {
     id: 9,
+    drm: "n", 
     category: "muzica",
   },
   vh1: {
     id: 110,
+    drm: "n", 
     category: "muzica",
   },
   "hit-music-channel": {
     id: 35,
+    drm: "n", 
     category: "muzica",
   },
   "kiss-tv": {
     id: 34,
+    drm: "n", 
     category: "muzica",
   },
   "mtv-europe": {
     id: 104,
+    drm: "n", 
     category: "muzica",
   },
   "music-channel": {
     id: 25,
+    drm: "n", 
     category: "muzica",
+  },  
+  "filmnow": {
+    id: 7,
+    drm: "y", 
+    category: "filme",
+  },
+  "hbo": {
+    id: 68,
+    drm: "y", 
+    category: "filme"
+  },
+  "hbo2": {
+    id: 69,
+    drm: "y", 
+    category: "filme"
+  },
+  "hbo3": {
+    id: 70,
+    drm: "y", 
+    category: "filme"
+  },
+  "cinemax": {
+    id: 97,
+    drm: "y", 
+    category: "filme"
+  },
+  "cinemax2": {
+    id: 98,
+    drm: "y", 
+    category: "filme"
   },
 };
 async function getLogin() {
@@ -603,7 +700,9 @@ exports.streamDigi = async (req, res, next) => {
             break;
         }
       }
-    } else if (ch24.includes(req.params.channel)) {
+    } else next();
+  } catch (error) {
+    if (ch24.includes(req.params.channel)) {
       switch(req.query.ts){
         case '1':
           if(ch[req.params.channel]){
@@ -685,9 +784,7 @@ exports.streamDigi = async (req, res, next) => {
           }
           break;
       }
-    } else next();
-  } catch (error) {
-    res.status(400).send(error);
+    } else res.status(400).send(error);
   }
 };
 exports.digiEpg = async (req, res, next) => {
