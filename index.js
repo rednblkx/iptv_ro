@@ -32,11 +32,7 @@ app.post('/login',express.urlencoded({extended: false}), (req,res) => {
     }
 })
 //AntenaP
-app.get('/:channel\.m3u8', ({next}) => {
-    // req.params.channel = req.params.channel.match('(.*).m3u8')[1]
-    next();
-})
-app.get('/:channel', live);
+app.get('/:channel.?(m3u8)?', live);
 app.get('/shows',async (req,res) => {
     try {
         res.send(await shows());
@@ -55,11 +51,7 @@ app.get('/show/play/:show/:epid', episode);
 app.get('/show/:show', showid);
 //DiGiOnline
 app.get('/:channel/epg', digiEpg);
-app.get('/:channel\.m3u8', ({next}) => {
-    // req.params.channel = req.params.channel.match('(.*).m3u8')[1]
-    next();
-})
-app.get('/:channel', streamDigi);
+app.get('/:channel.?(m3u8)?', streamDigi);
 //ProPlus
 app.get('/:channel', pro);
 
