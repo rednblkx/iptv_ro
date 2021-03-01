@@ -26,8 +26,8 @@ THERE IS NO WARRANTY FOR THE SCRIPT, IT MIGHT NOT WORK AT ALL AND IT CAN BREAK A
 ```
 ### DiGi
 ```
-/:channel(.m3u8) --> Live feed of a tv channel (see digionline.js file)
-/:channel(.m3u8)?ts=(0||1)&quality=(hq||mq||lq)
+/:channel(.m3u8)?ts=(0||1)&quality=(hq||mq||lq) --> Live feed of :channel (see digionline.js file for channel ids)
+/:channel/epg --> EPG for :channel
 ```
 Note: digi24, digisport1, digisport2, digisport3, digisport4 are available without account.
 
