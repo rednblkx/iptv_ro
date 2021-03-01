@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 const port = 3000;
-const {digi} = require('./digionline');
+const {streamDigi, digiEpg} = require('./digionline');
 const {pro} = require('./protv');
 const fs = require('fs')
 const {live, showid, shows, episode, tvantena} = require('./antena');
@@ -54,11 +54,12 @@ app.get('/ems',async (req,res) => {
 app.get('/show/play/:show/:epid', episode);
 app.get('/show/:show', showid);
 //DiGiOnline
+app.get('/:channel/epg', digiEpg);
 app.get('/:channel\.m3u8', ({next}) => {
     // req.params.channel = req.params.channel.match('(.*).m3u8')[1]
     next();
 })
-app.get('/:channel', digi);
+app.get('/:channel', streamDigi);
 //ProPlus
 app.get('/:channel', pro);
 
