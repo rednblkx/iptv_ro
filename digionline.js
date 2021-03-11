@@ -372,7 +372,7 @@ async function getLogin() {
   return new Promise(async (resolve, reject) => {
     try {
       if(consoleL) console.log("digi| getLogin: get auth.json");
-      let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString()).digi;
+      let auth = JSON.parse(fs.readFileSync(__dirname + "/auth.json").toString()).digi;
       if(consoleL) console.log("digi| getLogin: auth.json valid");
       if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "digi: No Credentials"
       if (auth.cookies) {
@@ -390,7 +390,7 @@ async function getLogin() {
   });
 }
 async function login(cookies) {
-  let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
+  let auth = JSON.parse(fs.readFileSync(__dirname + "/auth.json").toString());
   if(consoleL && cookies) console.log('digi| login: reusing cookies');
   if(consoleL && cookies) console.log(`digi| login: ${cookies}`);
   // console.log(`form-login-email=${encodeURIComponent(auth.digi.username)}&form-login-password=${encodeURIComponent(auth.digi.password)}`)
@@ -419,7 +419,7 @@ async function login(cookies) {
                     headers['set-cookie'].forEach(cookie => {
                         auth.digi.cookies.push(cookie.match(/[^;]*/)[0]);
                     });
-                    fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
+                    fs.writeFileSync(__dirname + "/auth.json", JSON.stringify(auth));
                     if (
                         auth.digi.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))
                     ) {
