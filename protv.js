@@ -15,7 +15,7 @@ async function login() {
     return new Promise(async (resolve, reject) => {
         try {
             if(consoleL) console.log("pro| login: getting auth.json");
-            let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
+            let auth = JSON.parse(fs.readFileSync(__dirname + "/auth.json").toString());
             if(consoleL) console.log("pro| login: auth.json valid");
             if(consoleL) console.log("pro| login: now signing in");
             let step1 = await axios.post(
@@ -35,7 +35,7 @@ async function login() {
                 if(consoleL) console.log("pro| login: got cookies");
                 if(consoleL) console.log(`pro| login: cookies_received = ${step1.headers["set-cookie"]}`);
                 auth.pro.cookies = step1.headers["set-cookie"].map((a) => a.match(/[^;]*/)[0]).join(";");
-                fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
+                fs.writeFileSync(__dirname + "/auth.json", JSON.stringify(auth));
                 resolve({cookie: auth.pro.cookies});
             } else reject("pro| login: Something wen wrong while signing in");
 
@@ -49,7 +49,7 @@ async function getLogin() {
     return new Promise(async (resolve, reject) => {
         try {
             if(consoleL) console.log(`pro| getLogin: getting auth.json`);
-            let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString()).pro;
+            let auth = JSON.parse(fs.readFileSync(__dirname + "/auth.json").toString()).pro;
             if(consoleL && auth) console.log(`pro| getLogin: auth.json valid`);
             if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "pro: No Credentials"
             if (auth.cookies) {
