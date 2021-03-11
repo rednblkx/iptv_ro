@@ -454,7 +454,7 @@ async function getLogin() {
   return new Promise(async (resolve, reject) => {
     try {
       if(consoleL) console.log("antena| getLogin: getting auth.json file");
-      let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString()).antena;
+      let auth = JSON.parse(fs.readFileSync(__dirname + '/auth.json').toString()).antena;
       if(consoleL) console.log("antena| getLogin: auth.json file valid");
       if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "antena| No Credentials"
       if (auth.cookies) {
@@ -473,12 +473,12 @@ async function getLogin() {
 async function setCookies(cookies) {
   return new Promise((resolve, reject) => {
     try {
-        fs.readFile('./auth.json', (err, data) => {
+        fs.readFile(__dirname + '/auth.json', (err, data) => {
           if(consoleL) console.log("antena| setCookies: creating cookies object");
           let auth = JSON.parse(data.toString());
           auth.antena.cookies[auth.antena.cookies.findIndex(el => el.includes('XSRF-TOKEN'))] = cookies[cookies.findIndex(el => el.includes('XSRF-TOKEN'))];
           auth.antena.cookies[auth.antena.cookies.findIndex(el => el.includes('laravel_session'))] = cookies[cookies.findIndex(el => el.includes('laravel_session'))];
-          fs.writeFile('./auth.json', JSON.stringify(auth), () => {if(consoleL) console.log("antena| setCookies: cookies successfully set");});
+          fs.writeFile(__dirname + '/auth.json', JSON.stringify(auth), () => {if(consoleL) console.log("antena| setCookies: cookies successfully set");});
           resolve('antena| setCookies: New Cookies!')
         })
       } catch (error) {
@@ -534,7 +534,7 @@ async function login() {
   return new Promise(async (resolve, reject) => {
   try {
     if(consoleL) console.log("antena| login: getting auth.json file");
-    let auth = JSON.parse(fs.readFileSync(path.join(__dirname, './', 'auth.json')).toString());
+    let auth = JSON.parse(fs.readFileSync(__dirname, + '/auth.json').toString());
     if(consoleL && auth) console.log("antena| login: auth.json valid");
     let tokens = await axios.get("https://antenaplay.ro/intra-in-cont", {
       headers: {
@@ -571,7 +571,7 @@ async function login() {
       },
     });
     auth.antena.cookies = live.headers["set-cookie"].map((a) => a.match(/[^;]*/)[0])
-    fs.writeFileSync(path.join(__dirname, './', 'auth.json'), JSON.stringify(auth));
+    fs.writeFileSync(__dirname + '/auth.json', JSON.stringify(auth));
     if (auth.antena.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))) {
       if(consoleL) console.log("antena| login: cookies found ");
         resolve(auth.antena.cookies);
