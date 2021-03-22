@@ -11,9 +11,9 @@ THIS SCRIPT DOES NOT OFFER FREE IPTV.
 THERE IS NO WARRANTY FOR THE SCRIPT, IT MIGHT NOT WORK AT ALL AND IT CAN BREAK AND STOP WORKING AT ANY TIME.
 
 ## API Endpoints
-### APlay
+### **APlay**
 ```
-/:channel(?ts=1) --> Live feed of tv channel (see antena.js file for channel IDs)
+/:channel(?ts=1&cached=1) --> Live feed of tv channel (see channels array at the beginning of antena.js)
 
 /shows --> List of all the TV Series
 
@@ -25,11 +25,16 @@ THERE IS NO WARRANTY FOR THE SCRIPT, IT MIGHT NOT WORK AT ALL AND IT CAN BREAK A
 
 /show/play/:showid/:epid --> Play episode :epid of a show :showid
 
+/antena/flush(?channel=:channel) --> Flush cached urls
+
 ```
-### DiGi
+### **DiGi**
 ```
-/:channel(.m3u8)?ts=(0||1)&quality=(hq||mq||lq) --> Live feed of :channel (see digionline.js file for channel ids)
+/:channel(.m3u8)?ts=(0||1)&quality=(hq||mq||lq) --> Live feed of :channel ((see channels array at the beginning of digionline.js))
+
 /:channel/epg --> EPG for :channel
+
+/digi/flush(?channel=:channel) --> Flush cached urls
 ```
 Note: digi24, digisport1, digisport2, digisport3, digisport4 are available without account.
 
@@ -68,9 +73,9 @@ Rewrited
 #EXTINF:6.0,
 https://xxxx.yyyy.zzz/stream.ts
 ```
-### ProPlus
+### **ProPlus**
 ```
-/:channel --> Live feed of a tv channel (see protv.js file)
+/:channel --> Live feed of a tv channel (see channels array at the beginning of protv.js)
 ```
 
 ## Authentication

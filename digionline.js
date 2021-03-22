@@ -558,6 +558,12 @@ function m3uFixURL(m3u, url) {
   });
   return m3u.join("\n");
 }
+exports.flush = (req,res) => {
+  if(req.query.channel){
+    ch[req.query.channel] = null;
+  } else ch = {};
+  res.send("Flushed");
+}
 exports.streamDigi = async (req, res, next) => {
   try {
     if (req.params.channel.match("(.*).m3u8"))
