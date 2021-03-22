@@ -1,11 +1,13 @@
 const express = require('express')
 const app = express()
 const port = 3000;
-const {streamDigi, digiEpg} = require('./digionline');
+const {streamDigi, digiEpg, flush: flushD} = require('./digionline');
 const {pro} = require('./protv');
 const fs = require('fs')
-const {live, showid, shows, episode, tvantena} = require('./antena');
+const {live, showid, shows, episode, tvantena, flush: flushA} = require('./antena');
 const path = require('path')
+app.get('/antena/flush', flushA)
+app.get('/digi/flush', flushD)
 app.get('/login', (req,res) => {
     res.sendFile(path.join(__dirname, './public', 'login.html'))
 })

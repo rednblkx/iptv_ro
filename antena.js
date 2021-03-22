@@ -57,7 +57,7 @@ exports.live = async (req, res, next) => {
   req.params.channel = req.params.channel.match("(.*).m3u8")[1];
   try {
     if (channels.includes(req.params.channel)) {
-      if (stream[req.params.channel] != undefined) {
+      if (stream[req.params.channel] != undefined && req.query.cached === '1') {
         if(consoleL) console.log("antena| live: cached URL");
         if(consoleL) console.log(`antena| live: URL used: ${stream[req.params.channel]}`);
         if(req.query.ts === "1"){
@@ -86,6 +86,12 @@ exports.live = async (req, res, next) => {
     res.status(505).send(error);
   }
 };
+exports.flush = (req,res) => {
+  if(req.query.channel){
+    stream[req.query.channel] = null;
+  } else stream = {};
+  res.send("Flushed");
+}
 exports.showid = async (req, res) => {
   try {
     if(consoleL) console.log("antena| showid: Getting show episodes");
