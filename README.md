@@ -1,4 +1,6 @@
 ## Disclaimer
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fredmusicxd%2Fiptv_ro.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fredmusicxd%2Fiptv_ro?ref=badge_shield)
+
 This script is not officially commissioned/supported by DIGI, Antena or ProTV. 
 For more information about digionline, antenaplay or protvplus, visit their official website.
 
@@ -81,3 +83,7 @@ Acces login configuration page at "/login", select the desired service and fill 
 
 
 &copy; **This project is licensed under the terms of the MIT license.**
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fredmusicxd%2Fiptv_ro.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fredmusicxd%2Fiptv_ro?ref=badge_large)
