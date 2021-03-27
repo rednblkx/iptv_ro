@@ -37,7 +37,7 @@ app.post('/login',express.urlencoded({extended: false}), (req,res) => {
 app.get('/:channel.?(m3u8)?', live);
 app.get('/shows',async (req,res) => {
     try {
-        if(req.query.format &&= 'html'){
+        if(req.query.format && req.query.format === 'html'){
             res.send(await showshtml())
         }else res.send(await shows());
     } catch (error) {
@@ -46,7 +46,7 @@ app.get('/shows',async (req,res) => {
 });
 app.get('/ems',async (req,res) => {
     try {
-        if(req.query.format &&= 'html'){
+        if(req.query.format && req.query.format === 'html'){
             res.send(await emshtml(req.query.page))
         }else res.send(await ems(req.query.page));
     } catch (error) {
