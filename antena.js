@@ -78,7 +78,10 @@ exports.live = async (req, res, next) => {
           let m3u8 = await axios.get(url)
           let qu = await axios.get(m3uParse(m3u8.data, "3000k"))
           res.send(m3uFixURL(qu.data, qu.config.url.match("(.*)\/")[0]))
-        }else res.redirect(url);
+        }else if(req.query.quality === 'get'){
+          let m3u8 = await axios.get(url)
+          res.json({"qualities": getQualities(m3u8.data, "")});
+      }else res.redirect(url);
       }
     } else next();
   } catch (error) {
@@ -536,6 +539,24 @@ async function getStream(channel) {
     }
   });
 }
+
+function getQualities(data, baseUrl) {
+  let line;
+  let lines = [];
+  let arr = data.split("\n").filter(function (str) {
+      return str.length > 0;
+    });
+    while ((line = arr.shift())) {
+      if (
+        line.includes(".m3u8")
+      ) {
+          if(consoleL) console.log(`pro| getQualities: ${line}`);
+          lines.push(baseUrl + line);
+      }
+    }
+    return lines;
+}
+
 async function login() {
   return new Promise(async (resolve, reject) => {
   try {
