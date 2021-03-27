@@ -99,7 +99,7 @@ exports.showid = async (req, res) => {
   try {
     if(consoleL) console.log("antena| showid: Getting show episodes");
     if(consoleL) console.log(`antena| showid: params = ${JSON.stringify(req.params)}`);
-    req.query.year && req.query.month ? res.send(await getShow(req.params.show, req.query.year, req.query.month)) : res.send(await getShow(req.params.show));
+    req.query.year && req.query.month ? res.send(await getShow(req.params.show, req.query.format, req.query.year, req.query.month)) : res.send(await getShow(req.params.show, req.query.format));
   } catch (error) {
     if(consoleL) console.error(error);
     res.status(500).send(error);
@@ -126,7 +126,7 @@ exports.episode = async (req, res) => {
 //     }
 //   }
 // }
-exports.shows = async function getShowsRoute() {
+exports.showshtml = async function getShowsRoute() {
   return new Promise(async (resolve,reject) => {
     try {
       if(consoleL) console.log("antena| shows: Getting HTML code");
@@ -147,11 +147,11 @@ exports.shows = async function getShowsRoute() {
   })
 
 }
-exports.tvantena = async function getEmsRoute(page) {
+exports.emshtml = async function getEmsRoute(page) {
   return new Promise(async (resolve,reject) => {
     try {
       if(consoleL) console.log("antena| shows: Getting HTML code");
-      let html = await getEms(page || "1");
+      let html = (await getEms(page || "1")).shows;
       if(consoleL && html) console.log("antena| shows: Got HTML");
       let $ = cheerio.load("<html><head><script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'/><title>Shows</title></head><body></body></html>");
       $("body").append("<ul></ul>");
@@ -236,6 +236,7 @@ async function getEpisode(show, epid) {
   }
 })
 }
+exports.shows = getShows;
 async function getShows() {
   return new Promise(async (resolve, reject) => {
     try {
@@ -268,11 +269,16 @@ async function getShows() {
         $($(".slider-container")[$(".slider-container").length - 1]).html()
       );
       let shows = [];
-      $$($$("a").each((i, el) => shows.push({
-        name: $$(el).children("h5").text(),
-        link: '/show' + $$(el).attr("href"),
-        img: $$(el).children('.container').children("img").attr('src')
-      })));
+      $$($$("a").each((i, el) => {
+        if(consoleL) console.log(`antena| shows: Appending show ${$$(el).children("h5").text()}`);
+        if(consoleL) console.log(`antena| shows: Appending show link ${'/show' + $$(el).attr("href")}`);
+        if(consoleL) console.log(`antena| shows: Appending show img ${$$(el).children('.container').children("img").attr('src')}`);
+        shows.push({
+          name: $$(el).children("h5").text(),
+          link: '/show' + $$(el).attr("href"),
+          img: $$(el).children('.container').children("img").attr('src')
+        })
+      }));
       shows.length !== 0 ? resolve(shows) : reject("antena| getShows: No List");
     } catch (error) {
       reject(`antena| getShows: ${error}`);
@@ -281,6 +287,7 @@ async function getShows() {
     }
   });
 }
+exports.ems = getEms;
 async function getEms(page) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -288,7 +295,7 @@ async function getEms(page) {
       let auth = await getLogin();
       if(consoleL && auth) console.log("antena| getShows: Got cookies");
       if(consoleL) console.log("antena| getShows: Getting HTML");
-      let pages = await axios.get(`https://antenaplay.ro/emisiuni-tv/load?channel=1&page=1`,
+      let pages = await axios.get(`https://antenaplay.ro/emisiuni-tv/load?page=1`,
       {
         headers: {
           referer: "https://antenaplay.ro/antena1",
@@ -297,7 +304,7 @@ async function getEms(page) {
           'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36",
         }
       })      
-      let html = await axios.get(`https://antenaplay.ro/emisiuni-tv/load?channel=1&page=${page <= pages.data.pagination.total_pages && page || pages.data.pagination.total_pages}`,
+      let html = await axios.get(`https://antenaplay.ro/emisiuni-tv/load?page=${page <= pages.data.pagination.total_pages && page || pages.data.pagination.total_pages}`,
       {
         headers: {
           referer: "https://antenaplay.ro/antena1",
@@ -310,12 +317,18 @@ async function getEms(page) {
       if(consoleL) console.log("antena| getEms: loading into cheerio");
       let $ = cheerio.load(html.data.view);
       let shows = [];
-      $("a").each((i, el) => shows.push({
+      let meta = {"total_pages": pages.data.pagination.total_pages, "per_page": pages.data.pagination.per_page, "total": pages.data.pagination.total, "current_page": pages.data.pagination.current_page}
+      $("a").each((i, el) => {
+        if(consoleL) console.log(`antena| shows: Appending show ${$(el).children(".text-container").children('h5').text()}`);
+        if(consoleL) console.log(`antena| shows: Appending show link ${'/show' + $(el).attr("href")}`);
+        if(consoleL) console.log(`antena| shows: Appending show img ${$(el).children(".container").children('img').attr('src')}`);
+      shows.push({
         name: $(el).children(".text-container").children('h5').text(),
         link: '/show' + $(el).attr("href"),
         img: $(el).children(".container").children('img').attr('src')
-      }));
-      shows.length !== 0 ? resolve(shows) : reject("antena| getShows: No List");
+      })
+    });
+      shows.length !== 0 ? resolve({meta,shows}) : reject("antena| getShows: No List");
     } catch (error) {
       reject(`antena| getEms: ${error}`);
       if(consoleL)
@@ -325,6 +338,7 @@ async function getEms(page) {
 }
 async function fetchLinkShow(
   url,
+  format,
   year = new Date().getFullYear(),
   month = new Date().getMonth() + 1
 ) {
@@ -355,12 +369,18 @@ async function fetchLinkShow(
       });
       if(consoleL && response.data) console.log("antena| fetchLinkShow: Got Episodes");
       var $ = cheerio.load(response.data.view);
+      let shows = [];
       $("a").each((i, url) => {
         $(url).prepend($($(url).children('.container').children('img')).attr("width", "200px")) 
         $(url).attr("href", "/show/play" + $(url).attr("href"));
+        shows.push({"name": $(url).children("h5").text(), "link": "/show/play" + $(url).attr("href"), "img": $(url).children("img").attr("src")});
       });
       $(".container").each((i, el) => $(el).remove());
-      $ ? resolve($.html()) : reject('antena| fetchLinkShow: No JSON')
+      if(format &&= 'html'){
+        $ ? resolve($.html()) : reject('antena| fetchLinkShow: No Data')
+      }else {
+        shows.length > 0 ? resolve(JSON.stringify(shows)) : reject('antena| fetchLinkShow: No Data')
+      }
     } catch (error) {
       reject(`antena| fetchLinkShow: ${error}`);
       if(consoleL)
@@ -368,7 +388,7 @@ async function fetchLinkShow(
     }
   });
 }
-async function getShow(show, year, month) {
+async function getShow(show, format, year, month) {
   return new Promise(async (resolve, reject) => {
   try {
     if(consoleL) console.log("antena| getShow: Getting Cookies ");
@@ -396,62 +416,75 @@ async function getShow(show, year, month) {
     if(consoleL && html.data) console.log("antena| getShow: Got HTML");
     if(consoleL) console.log("antena| getShow: loading into cheerio");
     let $ = cheerio.load(await html.data);
-    let $$ = cheerio.load("<html><head><script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'/><title>Selector</title></head><body></body></html>");
-    $$('body').append("<h1>Month</h1>");
-    $$('body').append(`
-    <script>
-      $( document ).ready(function() {
-        $("#year").on("change", function() {
-          var t = $(this).find("option:selected"),
-          e = t.data("months").split(";");
-          $("#month option").each(function() {
-            $.inArray($(this).val(), e) >= 0 ? $(this).prop("disabled", !1) : $(this).prop("disabled", !0)
-          }), $("#month option:enabled").eq(0).prop("selected", !0)
-        })
-        var t = $("#year").find("option:selected"),
-                e = t.data("months").split(";");
-            $("#month option").each(function() {
-                $.inArray($(this).val(), e) >= 0 ? $(this).prop("disabled", !1) : $(this).prop("disabled", !0)
-            }), $("#month option:enabled").eq(0).prop("selected", !0)
-      });
-    </script>
-    `);
-    $$('body')
-      $$('body').append(`<select id="month" data-month="true">
-      <option selected="" disabled="" class="option">Luna</option> 
-      <option value="01" class="option" disabled="">Ianuarie</option>
-      <option value="02" class="option" disabled="">Februarie</option>
-      <option value="03" disabled="" class="option">Martie</option>
-      <option value="04" disabled="" class="option">Aprilie</option>
-      <option value="05" disabled="" class="option">Mai</option>
-      <option value="06" disabled="" class="option">Iunie</option>
-      <option value="07" disabled="" class="option">Iulie</option>
-      <option value="08" disabled="" class="option">August</option>
-      <option value="09" disabled="" class="option">Septembrie</option>
-      <option value="10" disabled="" class="option">Octombrie</option>
-      <option value="11" class="option">Noiembrie</option>
-      <option value="12" class="option">Decembrie</option>       
-    </select>`)
-    $$('body').append("<h1>Year</h1>")
-    $$("body").append(`<select id="year"></select>`);
-      if($("#js-selector-year option:not([disabled])").length > 0){
-        $("#js-selector-year option:not([disabled])").each((i, el) => {
-          $$("#year").append(`<option data-months=${$(el).attr('data-months')} value=${$(el).val()}>${$(el).text()}</option>`);
-        })
-      }else $$("#year").append(`<option selected data-months=${$("#js-selector-year option:not([disabled])").attr('data-months')} value=${$("#js-selector-year option:not([disabled])").val()}>${$("#js-selector-year option:not([disabled])").text()}</option>`)
-      $$($$('#month > option')[$$('#month > option').length - 1]).attr('selected',true);
-      $$($$('#year > option')[$$('#year > option').length - 1]).attr('selected',true);
+    if(format &&= html){
+      let $$ = cheerio.load("<html><head><script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'/><title>Selector</title></head><body></body></html>");
+      $$('body').append("<h1>Month</h1>");
       $$('body').append(`
       <script>
-        function select(){
-          window.location.href='?year=' + document.querySelector('#year').value + '&month=' + document.querySelector('#month').value
-        }
-      </script>`)
-      $$("body").append(`<button onclick="select()">Submit</button>`)
-      !year || !month ? resolve($$.html()) : $ ? resolve(await fetchLinkShow(
+        $( document ).ready(function() {
+          $("#year").on("change", function() {
+            var t = $(this).find("option:selected"),
+            e = t.data("months").split(";");
+            $("#month option").each(function() {
+              $.inArray($(this).val(), e) >= 0 ? $(this).prop("disabled", !1) : $(this).prop("disabled", !0)
+            }), $("#month option:enabled").eq(0).prop("selected", !0)
+          })
+          var t = $("#year").find("option:selected"),
+                  e = t.data("months").split(";");
+              $("#month option").each(function() {
+                  $.inArray($(this).val(), e) >= 0 ? $(this).prop("disabled", !1) : $(this).prop("disabled", !0)
+              }), $("#month option:enabled").eq(0).prop("selected", !0)
+        });
+      </script>
+      `);
+      $$('body')
+        $$('body').append(`<select id="month" data-month="true">
+        <option selected="" disabled="" class="option">Luna</option> 
+        <option value="01" class="option" disabled="">Ianuarie</option>
+        <option value="02" class="option" disabled="">Februarie</option>
+        <option value="03" disabled="" class="option">Martie</option>
+        <option value="04" disabled="" class="option">Aprilie</option>
+        <option value="05" disabled="" class="option">Mai</option>
+        <option value="06" disabled="" class="option">Iunie</option>
+        <option value="07" disabled="" class="option">Iulie</option>
+        <option value="08" disabled="" class="option">August</option>
+        <option value="09" disabled="" class="option">Septembrie</option>
+        <option value="10" disabled="" class="option">Octombrie</option>
+        <option value="11" class="option">Noiembrie</option>
+        <option value="12" class="option">Decembrie</option>       
+      </select>`)
+      $$('body').append("<h1>Year</h1>")
+      $$("body").append(`<select id="year"></select>`);
+        if($("#js-selector-year option:not([disabled])").length > 0){
+          $("#js-selector-year option:not([disabled])").each((i, el) => {
+            $$("#year").append(`<option data-months=${$(el).attr('data-months')} value=${$(el).val()}>${$(el).text()}</option>`);
+          })
+        }else $$("#year").append(`<option selected data-months=${$("#js-selector-year option:not([disabled])").attr('data-months')} value=${$("#js-selector-year option:not([disabled])").val()}>${$("#js-selector-year option:not([disabled])").text()}</option>`)
+        $$($$('#month > option')[$$('#month > option').length - 1]).attr('selected',true);
+        $$($$('#year > option')[$$('#year > option').length - 1]).attr('selected',true);
+        $$('body').append(`
+        <script>
+          function select(){
+            window.location.href='?year=' + document.querySelector('#year').value + '&month=' + document.querySelector('#month').value
+          }
+        </script>`)
+        $$("body").append(`<button onclick="select()">Submit</button>`)
+        !year || !month ? resolve($$.html()) : $ ? resolve(await fetchLinkShow(
+          "https://antenaplay.ro" +
+            $(".js-slider-button.slide-right").attr("data-url"), format, year, month
+        )) : reject('getShow: No HTML')
+    }else {
+      let list = {};
+      if($("#js-selector-year option:not([disabled])").length > 0){
+        $("#js-selector-year option:not([disabled])").each((i, el) => {
+          $(el).attr('value') && (list[$(el).attr('value')] = ($(el).attr('data-months')).split(";"))
+        })
+      }else list[$("#js-selector-year option:not([disabled])").attr('value')] = ($("#js-selector-year option:not([disabled])").attr('data-months')).split(";")
+      !year || !month ? resolve(JSON.stringify(list)) : $ ? resolve(await fetchLinkShow(
         "https://antenaplay.ro" +
-          $(".js-slider-button.slide-right").attr("data-url"),year, month
+          $(".js-slider-button.slide-right").attr("data-url"), format, year, month
       )) : reject('getShow: No HTML')
+    }
     } catch (error) {
       reject("antena| getShow: " + error);
       if(consoleL)

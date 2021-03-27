@@ -12,12 +12,13 @@ THERE IS NO WARRANTY FOR THE SCRIPT, IT MIGHT NOT WORK AT ALL AND IT CAN BREAK A
 
 ## API Endpoints
 ### **APlay**
+
 ```
 /:channel(?ts=1&cached=1) --> Live feed of tv channel (see channels array at the beginning of antena.js)
 
-/shows --> List of all the TV Series
+/shows(?format=html) --> List of all the TV Series
 
-/ems --> List of TV Shows
+/ems(?page=:page) --> List of TV Shows
 
 /show/:showid --> Year & Month Selector for :showid episodes
 
@@ -28,6 +29,15 @@ THERE IS NO WARRANTY FOR THE SCRIPT, IT MIGHT NOT WORK AT ALL AND IT CAN BREAK A
 /antena/flush(?channel=:channel) --> Flush cached urls
 
 ```
+
+**Notes** 
+
+Responses for "/ems" and "/shows" endpoints are by default JSON, use "format" query paramater with "html" value for a HTML response.
+
+"/ems" endpoint is paginated by the platform, use "page" query paramater to select page, total of pages is stated in "meta" object, "total_pages" key.
+
+"/:channel" endpoint has the cached option to use in memory url.
+
 ### **DiGi**
 ```
 /:channel(.m3u8)?ts=(0||1)&quality=(hq||mq||lq) --> Live feed of :channel ((see channels array at the beginning of digionline.js))
@@ -36,16 +46,20 @@ THERE IS NO WARRANTY FOR THE SCRIPT, IT MIGHT NOT WORK AT ALL AND IT CAN BREAK A
 
 /digi/flush(?channel=:channel) --> Flush cached urls
 ```
-Note: digi24, digisport1, digisport2, digisport3, digisport4 are available without account.
+**Notes** 
 
-Note 2: For VLC use the "ts=1" query string(this is because digi banned the ffmpeg & VLC user-agents from accessing the main playlist but not the playlists with the .ts files)
+Use value "get" for "quality" paramater to get links for every bitrate.
+
+digi24, digisport1, digisport2, digisport3, digisport4 are available without account.
+
+For VLC use the "ts=1" query string(this is because digi banned the ffmpeg & VLC user-agents from accessing the main playlist but not the playlists with the .ts files)
 
 quality -> Choose the stream quality (see below)
 
 ts -> The API sends a playlist that has full-links for .ts and .key (see example below)
 
 Stream Qualities available:
-- hd - 1888595 - 1280x720 ( only for digi24, digisport1, digisport2, digisport3, digisport4 )
+- hd - 1888595 - 1280x720 ( only for digi24, digisport1, digisport2, digisport3, digisport4, kanal-d )
 - hq - 1213681 - 1024x576
 - mq - 296020 - 640x360
 - lq - 296020 - 320x180
@@ -75,8 +89,12 @@ https://xxxx.yyyy.zzz/stream.ts
 ```
 ### **ProPlus**
 ```
-/:channel --> Live feed of a tv channel (see channels array at the beginning of protv.js)
+/:channel(?quality=(hq,mq,lq)) --> Live feed of a tv channel (see channels array at the beginning of protv.js)
 ```
+
+**Notes**
+
+Use value "get" for "quality" paramater to get links for every bitrate.
 
 ## Authentication
 

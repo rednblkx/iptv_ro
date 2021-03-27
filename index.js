@@ -4,7 +4,7 @@ const port = 3000;
 const {streamDigi, digiEpg, flush: flushD} = require('./digionline');
 const {pro} = require('./protv');
 const fs = require('fs')
-const {live, showid, shows, episode, tvantena, flush: flushA} = require('./antena');
+const {live, showid, shows, episode, flush: flushA, ems, emshtml, showshtml} = require('./antena');
 const path = require('path')
 app.get('/antena/flush', flushA)
 app.get('/digi/flush', flushD)
@@ -37,14 +37,18 @@ app.post('/login',express.urlencoded({extended: false}), (req,res) => {
 app.get('/:channel.?(m3u8)?', live);
 app.get('/shows',async (req,res) => {
     try {
-        res.send(await shows());
+        if(req.query.format &&= 'html'){
+            res.send(await showshtml())
+        }else res.send(await shows());
     } catch (error) {
         res.status(505);
     }
 });
 app.get('/ems',async (req,res) => {
     try {
-        res.send(await tvantena(req.query.page));
+        if(req.query.format &&= 'html'){
+            res.send(await emshtml(req.query.page))
+        }else res.send(await ems(req.query.page));
     } catch (error) {
         res.status(505);
     }
