@@ -543,6 +543,22 @@ function m3uParse(data, quality) {
     }
   }
 }
+function getQualities(data, baseUrl) {
+  let line;
+  let lines = [];
+  let arr = data.split("\n").filter(function (str) {
+      return str.length > 0;
+    });
+    while ((line = arr.shift())) {
+      if (
+        line.includes(".m3u8")
+      ) {
+          if(consoleL) console.log(`pro| getQualities: ${line}`);
+          lines.push(baseUrl + line);
+      }
+    }
+    return lines;
+}
 function m3uFixURL(m3u, url) {
   m3u = m3u.split("\n");
   m3u.forEach((el, index, array) => {
@@ -572,30 +588,6 @@ exports.streamDigi = async (req, res, next) => {
     if (channels[req.params.channel]) {
       if(await getLogin()){
         switch(req.query.ts){
-          case "0":
-            try {
-              if(consoleL) console.log("digi| digi: getting from digi");
-              let url = await getFromDigi(
-                channels[req.params.channel].id,
-                req.params.channel,
-                channels[req.params.channel].category
-              );
-              if(url.data.stream_url === "" && url.data.stream_err !== ""){
-                throw url.data.stream_err
-              }
-              if(consoleL && url.data) console.log("digi| digi: got response");
-              if(consoleL && url.data) console.log(`digi| digi: ${JSON.stringify(url.data)}`);
-              // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-              // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
-              // url != 0 ? res.redirect(url) : res.status(404)
-              if(req.query.quality && channels[req.params.channel].drm !== "y"){
-                let m3u8 = await axios.get(url.data.stream_url);
-                res.redirect(url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq"));
-              }else channels[req.params.channel].drm === "y" ? res.json(`{"manifestUrl": "${url.data['stream.manifest.url']}","wproxy": "${url.data['widevine.proxy']}"}`) : res.redirect(url.data.stream_url) 
-            } catch (error) {
-              res.status(400).send(error)
-            }
-            break;
           case "1":
             if(ch[req.params.channel]){
               if(req.query.quality){
@@ -696,7 +688,10 @@ exports.streamDigi = async (req, res, next) => {
               // res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
               // res.send(`#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:0,Kanal D\n${url}`);
               // url != 0 ? res.redirect(url) : res.status(404)
-              if(req.query.quality && channels[req.params.channel].drm !== "y"){
+              if(req.query.quality === 'get' && channels[req.params.channel].drm !== "y"){
+                let m3u8 = await axios.get(url.data.stream_url);
+                res.json({"qualities": getQualities(m3u8.data, url.data.stream_url.match("(.*)\/")[0])})
+              }else if(req.query.quality && channels[req.params.channel].drm !== "y"){
                 let m3u8 = await axios.get(url.data.stream_url);
                 res.redirect(url.data.stream_url.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq"));
               }else channels[req.params.channel].drm === "y" ? res.json({"manifestUrl": url.data.data.content['stream.manifest.url'],"wproxy": url.data.data.content['widevine.proxy']}) : res.redirect(url.data.stream_url) 
