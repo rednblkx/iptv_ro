@@ -112,6 +112,8 @@ async function getPlaylist(name) {
                 },
             });
             if(consoleL && step3.data) console.log(`pro| getPlaylist: got channel's stream`);
+            // if(consoleL && step3.data) console.log(`pro| getPlaylist: ${step3.data}`);
+            if(consoleL && step3.data) console.log(`pro| getPlaylist: ${step3.data.match('{"HLS"(.*)}]}')}`);
             if(consoleL && step3.data) console.log(`pro| getPlaylist: ${JSON.parse(step3.data.match('{"HLS"(.*)}]}')[0]).HLS[0].src}`);
             resolve(JSON.parse(step3.data.match('{"HLS"(.*)}]}')[0]).HLS[0].src);
         } catch (error) {
@@ -133,23 +135,66 @@ async function getPlaylist(name) {
 //     })
 //     return m3u.join('\n');
 // }
-function selectQuality(data) {
-    if(consoleL) console.log(`pro| selectQuality: ${data.match("(.*)fullhd.m3u8(.*)")[0] ? data.match("(.*)fullhd.m3u8(.*)")[0] : data.match("(.*)hd.m3u8(.*)")[0]}`);
-    return data.match("(.*)fullhd.m3u8(.*)")[0] ? data.match("(.*)fullhd.m3u8(.*)")[0] : data.match("(.*)hd.m3u8(.*)")[0];
+function selectQuality(data, quality) {
+    let line;
+    let arr = data.split("\n").filter(function (str) {
+        return str.length > 0;
+      });
+      while ((line = arr.shift())) {
+        if (
+          line.includes(".m3u8") && (line.includes(['hq', 'lq', 'mq'].includes(quality) ? quality : "hq"))
+        ) {
+          return line;
+        }
+      }
+    // if(consoleL) console.log(`pro| selectQuality: ${data.match("(.*)fullhd.m3u8(.*)")[0] ? data.match("(.*)fullhd.m3u8(.*)")[0] : data.match("(.*)hd.m3u8(.*)")[0]}`);
+    // return data.match("(.*)fullhd.m3u8(.*)")[0] ? data.match("(.*)fullhd.m3u8(.*)")[0] : data.match("(.*)hd.m3u8(.*)")[0];
 }
+
+function getQualities(data, baseUrl) {
+    let line;
+    let lines = [];
+    let arr = data.split("\n").filter(function (str) {
+        return str.length > 0;
+      });
+      while ((line = arr.shift())) {
+        if (
+          line.includes(".m3u8")
+        ) {
+            if(consoleL) console.log(`pro| getQualities: ${line}`);
+            lines.push(baseUrl + line);
+        }
+      }
+      return lines;
+}
+
 exports.pro = async (req, res, next) => {
     try {
         if (channels[req.params.channel]) {
+            let stream = await getPlaylist(req.params.channel);
             if(consoleL) console.log(`pro| pro: Getting channel stream URL`);
-            let quality = await axios.get(await getPlaylist(req.params.channel), {
-                headers: {
-                    accept: "*/*",
-                    referrer: "https://media.cms.protvplus.ro/",
-                },
-            });
-            if(consoleL && quality.data) console.log(`pro| pro: got channel's stream URL`);
-            if(consoleL && quality.data) console.log(`pro| pro: ${quality.config.url.match("(.*)/playlist.m3u8")[1] + "/" + selectQuality(quality.data)}`);
-            res.redirect(quality.config.url.match("(.*)/playlist.m3u8")[1] + "/" + selectQuality(quality.data));
+            if(consoleL) console.log(`pro| pro: ${stream}`);
+            if(req.query.quality === 'get'){
+                let quality = await axios.get(stream, {
+                    headers: {
+                        accept: "*/*",
+                        referrer: "https://media.cms.protvplus.ro/",
+                    },
+                });
+                res.json({"qualities": getQualities(quality.data, quality.config.url.match("(.*)\/")[0])})
+            }else if(req.query.quality){
+                let quality = await axios.get(stream, {
+                    headers: {
+                        accept: "*/*",
+                        referrer: "https://media.cms.protvplus.ro/",
+                    },
+                });
+                if(consoleL && quality.data) console.log(`pro| pro: got channel's quality "${req.query.quality}" stream URL`);
+                if(consoleL && quality.data) console.log(`pro| pro: ${quality.data}`);
+                if(consoleL && quality.data) console.log(`pro| pro: ${quality.config.url}`);
+                if(consoleL && quality.data) console.log(`pro| pro: ${quality.config.url.match("(.*)\/")[0] + selectQuality(quality.data, req.query.quality)}`);
+                res.redirect(quality.config.url.match("(.*)\/")[0] + selectQuality(quality.data, req.query.quality));
+            }else res.redirect(stream)
         } else
             next();
     } catch (error) {
