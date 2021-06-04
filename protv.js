@@ -73,7 +73,7 @@ async function getPlaylist(name) {
         try {
             if(consoleL) console.log(`pro| getPlaylist: getting tokens`);
             let auth = await getLogin();
-            if(consoleL && auth) console.log(`pro| getPlaylist: got tokens`);
+            if(consoleL && auth) console.log(`pro| getPlaylist: got tokens ${auth.cookie}`);
             if(consoleL) console.log(`pro| getPlaylist: getting channel's HTML`);
             let step1 = await axios.get(`https://protvplus.ro/tv-live/${
                 channels[name]
@@ -106,10 +106,8 @@ async function getPlaylist(name) {
             if(consoleL) console.log(`pro| getPlaylist: getting channel's stream URL`);
             let step3 = await axios.get($("iframe").attr("src"), {
                 headers: {
-                    accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-                    "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
                     cookie: auth.cookie,
-                    referrer: "https://protvplus.ro/"
+                    referer: "https://protvplus.ro/tv-live/1-pro-tv"
                 },
             });
             if(consoleL && step3.data) console.log(`pro| getPlaylist: got channel's stream`);
@@ -142,11 +140,18 @@ function selectQuality(data, quality) {
         return str.length > 0;
       });
       while ((line = arr.shift())) {
-        if (
-          line.includes(".m3u8") && (line.includes(['hq', 'lq', 'mq'].includes(quality) ? quality : "hq"))
-        ) {
-          return line;
-        }
+          if(quality === "fullhd"){
+              if(line.includes("hq")){
+                  line = line.replace("hq", quality)
+                  return line
+              }
+          }
+          else
+            if (
+            line.includes(".m3u8") && (line.includes(['hq', 'lq', 'mq'].includes(quality) ? quality : "hq"))
+            ) {
+            return line;
+            }
       }
     // if(consoleL) console.log(`pro| selectQuality: ${data.match("(.*)fullhd.m3u8(.*)")[0] ? data.match("(.*)fullhd.m3u8(.*)")[0] : data.match("(.*)hd.m3u8(.*)")[0]}`);
     // return data.match("(.*)fullhd.m3u8(.*)")[0] ? data.match("(.*)fullhd.m3u8(.*)")[0] : data.match("(.*)hd.m3u8(.*)")[0];
@@ -157,6 +162,11 @@ function getQualities(data, baseUrl) {
     let lines = [];
     let arr = data.split("\n").filter(function (str) {
         return str.length > 0;
+      });
+      arr.forEach(element => {
+          if(element.includes("hq")){
+            lines.push(baseUrl + element.replace("hq", "fullhd"))
+          }
       });
       while ((line = arr.shift())) {
         if (
@@ -179,15 +189,16 @@ exports.pro = async (req, res, next) => {
                 let quality = await axios.get(stream, {
                     headers: {
                         accept: "*/*",
-                        referrer: "https://media.cms.protvplus.ro/",
+                        referer: "https://media.cms.protvplus.ro/",
                     },
                 });
+                if(consoleL) console.log(`pro| pro: ${quality.data}`);
                 res.json({"qualities": getQualities(quality.data, quality.config.url.match("(.*)\/")[0])})
             }else if(req.query.quality){
                 let quality = await axios.get(stream, {
                     headers: {
                         accept: "*/*",
-                        referrer: "https://media.cms.protvplus.ro/",
+                        referer: "https://media.cms.protvplus.ro/",
                     },
                 });
                 if(consoleL && quality.data) console.log(`pro| pro: got channel's quality "${req.query.quality}" stream URL`);
