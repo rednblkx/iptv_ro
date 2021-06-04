@@ -96,6 +96,10 @@ https://xxxx.yyyy.zzz/stream.ts
 
 Use value "get" for "quality" paramater to get links for every bitrate.
 
+You have to add the following HTTP Header to every stream to be able to watch:
+
+- Referer: "https://media.cms.protvplus.ro/
+
 ## Authentication
 
 Acces login configuration page at "/login", select the desired service and fill accordingly.
