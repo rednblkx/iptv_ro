@@ -14,7 +14,7 @@ THERE IS NO WARRANTY FOR THE SCRIPT, IT MIGHT NOT WORK AT ALL AND IT CAN BREAK A
 ### **APlay**
 
 ```
-/:channel(?ts=1&cached=1) --> Live feed of tv channel (see channels array at the beginning of antena.js)
+/:channel(?ts=true&cached=true) --> Live feed of tv channel (see channels array at the beginning of antena.js)
 
 /shows(?format=html) --> List of all the TV Series
 
@@ -32,7 +32,9 @@ THERE IS NO WARRANTY FOR THE SCRIPT, IT MIGHT NOT WORK AT ALL AND IT CAN BREAK A
 
 **Notes** 
 
-Responses for "/ems" and "/shows" endpoints are by default JSON, use "format" query paramater with "html" value for a HTML response.
+Use value "get" for "quality" paramater to get links for every bitrate.
+
+Responses for "/ems" and "/shows" endpoints are by default JSON, use "format" query paramater with "html" value for an HTML response.
 
 "/ems" endpoint is paginated by the platform, use "page" query paramater to select page, total of pages is stated in "meta" object, "total_pages" key.
 
@@ -96,6 +98,10 @@ https://xxxx.yyyy.zzz/stream.ts
 
 Use value "get" for "quality" paramater to get links for every bitrate.
 
+You have to add the following HTTP Header to every stream to be able to watch:
+
+- Referer: https://media.cms.protvplus.ro/
+
 ## Authentication
 
 Acces login configuration page at "/login", select the desired service and fill accordingly.
@@ -103,6 +109,18 @@ Acces login configuration page at "/login", select the desired service and fill 
 ------------------------------------
 
 ## Notes
+
+config.json - here set some defaults, adjust accordingly as following:
+
+ 
+1. Antena
+    - res_format: receive response in JSON or HTML (possible values "json" or "html")
+    - cache_url: whether the stream url should be kept in memory for cache_expire_ms miliseconds (6 hours by default - 2.16e+7)
+    - cache_expire_ms - time for cached url to be saved
+    - rewrite_url: url up to .ts files rewriting to absolute path
+    - quality: the quality (bitrate) of the stream
+2. Pro
+    - quality: the quality (bitrate) of the stream
 
 
 &copy; **This project is licensed under the terms of the MIT license.**
