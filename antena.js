@@ -1,9 +1,9 @@
 const { default: axios } = require("axios");
 const cheerio = require("cheerio");
+const { query } = require("express");
 const fs = require("fs");
-const path = require('path');
 
-channels = [
+var channels = [
   "antena1",
   "happy-channel",
   "zu-tv",
@@ -24,7 +24,7 @@ function Cookie(name, value) {
 Cookie.prototype.toString = function CookietoString() {
   return `${this.name}=${this.value}`;
 };
-function m3uParse(data, quality) {
+function setQuality(data, quality) {
   let line;
   var m3u = data.split("\n").filter(function (str) {
     return str.length > 0;
@@ -54,31 +54,63 @@ function m3uFixURL(m3u, url) {
 }
 exports.live = async (req, res, next) => {
   if (req.params.channel.match("(.*).m3u8"))
-  req.params.channel = req.params.channel.match("(.*).m3u8")[1];
+    req.params.channel = req.params.channel.match("(.*).m3u8")[1];
+  if(!req.query.cached){
+    req.query.cached = getDefault('cache_url')
+  }
+  if(!req.query.ts){
+    req.query.ts = getDefault('rewrite_url')
+  }
+  if(!req.query.quality){
+    switch(getDefault('quality')){
+      case "hq":
+        req.query.quality = "3000k";
+        break;
+      case "mq":
+        req.query.quality = "1400k";
+        break;   
+      case "lq":
+        req.query.quality = "600k";
+        break;  
+      default:
+        req.query.quality = "auto";
+        break;
+    }
+  }
+  var time;
   try {
     if (channels.includes(req.params.channel)) {
-      if (stream[req.params.channel] != undefined && req.query.cached === '1') {
+      if (stream[req.params.channel] != undefined && req.query.cached === 'true') {
         if(consoleL) console.log("antena| live: cached URL");
         if(consoleL) console.log(`antena| live: URL used: ${stream[req.params.channel]}`);
-        if(req.query.ts === "1"){
+        if(req.query.ts === 'true'){
+          if(consoleL) console.log("antena| live: rewriting enabled");
           res.contentType("application/vnd.apple.mpegurl")
           let m3u8 = await axios.get(stream[req.params.channel])
-          let qu = await axios.get(m3uParse(m3u8.data, "3000k"))
-          res.send(m3uFixURL(qu.data, qu.config.url.match("(.*)\/")[0]))
-        }else res.redirect(stream[req.params.channel]);
+          let qu = await axios.get(setQuality(m3u8.data, req.query.quality))
+          if(consoleL) console.log(`antena| live: using quality "${req.query.quality}"`);
+          res.send(m3uFixURL(qu.data, qu.config.url.match("(.*)/")[0]))
+        }else if(req.query.quality !== "auto"){
+          let m3u8 = await axios.get(stream[req.params.channel])
+          res.redirect(setQuality(m3u8.data, req.query.quality))
+        } else res.redirect(stream[req.params.channel]);
       } else {
-        let url = await getStream(req.params.channel);
         if(consoleL) console.log("antena| live: getting stream URL");
-        if(consoleL && url) console.log("antena| live: stream URL received");
-        if(consoleL) console.log(`antena| live: URL used: ${url}`);
+        let url = await getStream(req.params.channel);
+        if(consoleL && url) console.log(`antena| live: stream URL received ${url}`);
         stream[req.params.channel] = url;
-        setTimeout(() => {delete stream[req.params.channel];if(consoleL) console.log("antena| live: Timeout set");}, 2.16e+7);
-        if(req.query.ts === "1"){
+        clearTimeout(time);
+        time = setTimeout(() => {delete stream[req.params.channel];if(consoleL) console.log("antena| live: Cache Expired");}, getDefault('cache_expire_ms') || 2.16e+7);
+        if(req.query.ts === 'true'){
           res.contentType("application/vnd.apple.mpegurl")
           let m3u8 = await axios.get(url)
-          let qu = await axios.get(m3uParse(m3u8.data, "3000k"))
-          res.send(m3uFixURL(qu.data, qu.config.url.match("(.*)\/")[0]))
-        }else if(req.query.quality === 'get'){
+          let qu = await axios.get(setQuality(m3u8.data, req,query.quality))
+          res.send(m3uFixURL(qu.data, qu.config.url.match("(.*)/")[0]))
+        }else if(req.query.quality !== "auto"){
+          let m3u8 = await axios.get(stream[req.params.channel])
+          if(consoleL) console.log(`antena| live: using quality "${req.query.quality}"`);
+          res.redirect(setQuality(m3u8.data, req.query.quality))
+        } else if(req.query.quality === 'get'){
           let m3u8 = await axios.get(url)
           res.json({"qualities": getQualities(m3u8.data, "")});
       }else res.redirect(url);
@@ -127,7 +159,6 @@ exports.episode = async (req, res) => {
 //   }
 // }
 exports.showshtml = async function getShowsRoute() {
-  return new Promise(async (resolve,reject) => {
     try {
       if(consoleL) console.log("antena| shows: Getting HTML code");
       let html = await getShows();
@@ -140,15 +171,13 @@ exports.showshtml = async function getShowsRoute() {
         if(consoleL) console.log(`antena| shows: Appending show img ${el.img}`);
         $("ul").append(`<li><a href=${el.link}><img src=${el.img} width=100px><br><span>${el.name}</span></a></li>`);
       });
-      resolve($.html());
+      return $.html();
     } catch (error) {
-      reject(`antena| getShowRoute: ${error}`);
+      return `antena| getShowRoute: ${error}`;
     }
-  })
 
 }
 exports.emshtml = async function getEmsRoute(page) {
-  return new Promise(async (resolve,reject) => {
     try {
       if(consoleL) console.log("antena| shows: Getting HTML code");
       let html = (await getEms(page || "1")).shows;
@@ -168,11 +197,10 @@ exports.emshtml = async function getEmsRoute(page) {
         if(consoleL) console.log(`antena| shows: Appending show img ${el.img}`);
         $("ul").append(`<li><a href=${el.link}><img src=${el.img} width=100px><br><span>${el.name}</span></a></li>`);
       });
-      resolve($.html());
+      return $.html();
     } catch (error) {
-      reject(`antena| getEmsRoute: ${error}`);
+      return `antena| getEmsRoute: ${error}`
     }
-  })
 
 }
 async function getEpisode(show, epid) {
@@ -189,13 +217,6 @@ async function getEpisode(show, epid) {
       `https://antenaplay.ro/${show}/${epid}`,
       {
         headers: {
-          accept: "*/*",
-          "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-          "cache-control": "no-cache",
-          pragma: "no-cache",
-          "sec-fetch-dest": "empty",
-          "sec-fetch-mode": "cors",
-          "sec-fetch-site": "same-origin",
           "x-newrelic-id": "VwMCV1VVGwEEXFdQDwIBVQ==",
           "x-requested-with": "XMLHttpRequest",
           cookie: auth.join("; "),
@@ -216,14 +237,7 @@ async function getEpisode(show, epid) {
           "no",
         {
           headers: {
-            "user-agent": "curl/7.68.0",
-            pragma: "no-cache",
-            accept: "*/*",
-            "sec-fetch-site": "same-site",
-            "sec-fetch-mode": "no-cors",
-            "sec-fetch-dest": "script",
             referer: "https://antenaplay.ro/",
-            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
           },
         }
       );
@@ -246,16 +260,6 @@ async function getShows() {
       if(consoleL) console.log("antena| getShows: Getting HTML");
       let html = await axios.get(`https://antenaplay.ro/seriale`, {
         headers: {
-          accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-          "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-          "cache-control": "no-cache",
-          pragma: "no-cache",
-          "sec-fetch-dest": "document",
-          "sec-fetch-mode": "navigate",
-          "sec-fetch-site": "same-origin",
-          "sec-fetch-user": "?1",
-          "upgrade-insecure-requests": "1",
           cookie: auth.join("; "),
         },
         referrer: `https://antenaplay.ro/`,
@@ -289,7 +293,6 @@ async function getShows() {
 }
 exports.ems = getEms;
 async function getEms(page) {
-  return new Promise(async (resolve, reject) => {
     try {
       if(consoleL) console.log("antena| getShows: Getting cookies");
       let auth = await getLogin();
@@ -304,7 +307,7 @@ async function getEms(page) {
           'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36",
         }
       })      
-      let html = await axios.get(`https://antenaplay.ro/emisiuni-tv/load?page=${page <= pages.data.pagination.total_pages && page || pages.data.pagination.total_pages}`,
+      let html = await axios.get(`https://antenaplay.ro/emisiuni-tv/load?page=${page <= pages.data.pagination.total_pages && page ? page : !page ? 1 : pages.data.pagination.total_pages}`,
       {
         headers: {
           referer: "https://antenaplay.ro/antena1",
@@ -328,13 +331,12 @@ async function getEms(page) {
         img: $(el).children(".container").children('img').attr('src')
       })
     });
-      shows.length !== 0 ? resolve({meta,shows}) : reject("antena| getShows: No List");
+      return shows.length !== 0 ? {meta,shows} : "antena| getShows: No List"
     } catch (error) {
-      reject(`antena| getEms: ${error}`);
       if(consoleL)
         console.error(error);
+      return `antena| getEms: ${error}`
     }
-  });
 }
 async function fetchLinkShow(
   url,
@@ -344,6 +346,9 @@ async function fetchLinkShow(
 ) {
   return new Promise(async (resolve, reject) => {
     try {
+      if(!format){
+        format = getDefault('res_format')
+      }
       if(consoleL) console.log("antena| fetchLinkShow: Getting Cookies ");
       let auth = await getLogin();
       if(consoleL && auth) console.log("antena| fetchLinkShow: Got cookies");
@@ -351,21 +356,12 @@ async function fetchLinkShow(
       if(consoleL) console.log(`antena| fetchLinkShow: Link used ${url}${year && month ? '&year=' + year + '&month=' + month : ''}`);
       let response = await axios.get(`${url}${year && month ? '&year=' + year + '&month=' + month : ''}`, {
         headers: {
-          accept: "*/*",
-          "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-          "cache-control": "no-cache",
-          pragma: "no-cache",
-          "sec-fetch-dest": "empty",
-          "sec-fetch-mode": "cors",
-          "sec-fetch-site": "same-origin",
           "x-newrelic-id": "VwMCV1VVGwEEXFdQDwIBVQ==",
           "x-requested-with": "XMLHttpRequest",
           cookie: auth.join("; "),
         },
         withCredentials: true,
-        referrer: "https://antenaplay.ro/",
-        referrerPolicy: "no-referrer-when-downgrade",
-        mode: "cors",
+        referrer: "https://antenaplay.ro/"
       });
       if(consoleL && response.data) console.log("antena| fetchLinkShow: Got Episodes");
       var $ = cheerio.load(response.data.view);
@@ -391,22 +387,15 @@ async function fetchLinkShow(
 async function getShow(show, format, year, month) {
   return new Promise(async (resolve, reject) => {
   try {
+    if(!format){
+      format = getDefault('res_format')
+    }
     if(consoleL) console.log("antena| getShow: Getting Cookies ");
     let auth = await getLogin();
     if(consoleL && auth) console.log("antena| getShow: Got Cookies ");
     if(consoleL) console.log("antena| getShow: Getting HTML");
     let html = await axios.get(`https://antenaplay.ro/${show}`, {
       headers: {
-        accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-        "cache-control": "no-cache",
-        pragma: "no-cache",
-        "sec-fetch-dest": "document",
-        "sec-fetch-mode": "navigate",
-        "sec-fetch-site": "same-origin",
-        "sec-fetch-user": "?1",
-        "upgrade-insecure-requests": "1",
         cookie: auth.join("; "),
       },
       referrer: `https://antenaplay.ro/seriale`,
@@ -512,6 +501,11 @@ async function getLogin() {
   });
 }
 
+function getDefault(scope){
+  const conf = JSON.parse(fs.readFileSync('config.json')).antena
+  return conf[scope]
+}
+
 async function setCookies(cookies) {
   return new Promise((resolve, reject) => {
     try {
@@ -538,16 +532,6 @@ async function getStream(channel) {
       if(consoleL) console.log("antena| getStream: getting HTML");
       let html = await axios.get(`https://antenaplay.ro/live/${channel}`, {
         headers: {
-          accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-          "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-          "cache-control": "no-cache",
-          pragma: "no-cache",
-          "sec-fetch-dest": "document",
-          "sec-fetch-mode": "navigate",
-          "sec-fetch-site": "same-origin",
-          "sec-fetch-user": "?1",
-          "upgrade-insecure-requests": "1",
           cookie: auth.join("; "),
         },
         withCredentials: true,
@@ -583,7 +567,7 @@ function getQualities(data, baseUrl) {
       if (
         line.includes(".m3u8")
       ) {
-          if(consoleL) console.log(`pro| getQualities: ${line}`);
+          if(consoleL) console.log(`antena| getQualities: ${line}`);
           lines.push(baseUrl + line);
       }
     }
@@ -594,7 +578,7 @@ async function login() {
   return new Promise(async (resolve, reject) => {
   try {
     if(consoleL) console.log("antena| login: getting auth.json file");
-    let auth = JSON.parse(fs.readFileSync(__dirname, + '/auth.json').toString());
+    let auth = JSON.parse(fs.readFileSync(__dirname + '/auth.json'));
     if(consoleL && auth) console.log("antena| login: auth.json valid");
     let tokens = await axios.get("https://antenaplay.ro/intra-in-cont", {
       headers: {
