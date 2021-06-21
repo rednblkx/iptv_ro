@@ -11,6 +11,10 @@ app.get('/digi/flush', flushD)
 app.get('/login', (req,res) => {
     res.sendFile(path.join(__dirname, './public', 'login.html'))
 })
+function getDefault(platform, scope){
+    const conf = JSON.parse(fs.readFileSync('config.json'))[platform]
+    return conf[scope]
+  }
 app.post('/login',express.urlencoded({extended: false}), (req,res) => {
     var file;
     try {
@@ -36,6 +40,9 @@ app.post('/login',express.urlencoded({extended: false}), (req,res) => {
 //AntenaP
 app.get('/:channel.?(m3u8)?', live);
 app.get('/shows',async (req,res) => {
+    if(!req.query.format){
+        req.query.format = getDefault('antena','res_format')
+    }
     try {
         if(req.query.format && req.query.format === 'html'){
             res.send(await showshtml())
@@ -45,6 +52,9 @@ app.get('/shows',async (req,res) => {
     }
 });
 app.get('/ems',async (req,res) => {
+    if(!req.query.format){
+        req.query.format = getDefault('antena','res_format')
+    }
     try {
         if(req.query.format && req.query.format === 'html'){
             res.send(await emshtml(req.query.page))
