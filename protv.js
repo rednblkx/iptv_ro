@@ -11,6 +11,10 @@ const channels = {
     "pro-cinema": 5
 };
 var consoleL = process.env.DEBUG;
+function getDefault(scope){
+    const conf = JSON.parse(fs.readFileSync('config.json')).pro
+    return conf[scope]
+  }
 async function login() {
     return new Promise(async (resolve, reject) => {
         try {
@@ -169,6 +173,9 @@ function getQualities(data, baseUrl) {
 }
 
 exports.pro = async (req, res, next) => {
+    if(!req.query.quality){
+        req.query.quality = getDefault('quality')
+    }
     try {
         if (channels[req.params.channel]) {
             let stream = await getPlaylist(req.params.channel);
