@@ -11,6 +11,10 @@ const channels = {
     "pro-cinema": 5
 };
 var consoleL = process.env.DEBUG;
+function getDefault(scope){
+    const conf = JSON.parse(fs.readFileSync('config.json')).pro
+    return conf[scope]
+  }
 async function login() {
     return new Promise(async (resolve, reject) => {
         try {
@@ -25,7 +29,6 @@ async function login() {
                 headers: {
                     'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
                     "Content-Type": "application/x-www-form-urlencoded",
-                    "Cookie": "SID=l73i9m3q6psvkm19s7piphmsni; votoken=DXuxOECh5nd8wwtaQ5qh6X90fLEM4Ee8MXlfc1FyhF4s31EWQ3YjUZg7Z8JPGvMVF3YGlpRhTmMC9n5UG6%2BBAHsidG9rZW4iOiI1ZDdkOTFmMDUzMDg0MjRmYjM5ODg5MDdlNDg1NWY1YSIsImlkIjoxMjQ2MDI4LCJuYW1lIjoiV2hpdGUiLCJlbWFpbCI6ImRhbm5lZ3J1NDBAZ21haWwuY29tIiwiZGV2aWNlIjp7InR5cGUiOiJkZXNrdG9wIiwib3MiOiJXaW5kb3dzIiwib3NfdmVyc2lvbiI6IjEwLjAiLCJtb2RlbCI6bnVsbCwibWFudWZhY3R1cmVyIjpudWxsLCJwcm9kdWN0aW9uX3llYXIiOm51bGwsIm5hbWUiOm51bGwsImJyb3dzZXIiOiJDaHJvbWUiLCJicm93c2VyX3ZlcnNpb24iOiI4OC4wLjQzMjQuOTYifX0%3D;"
                 },
                 responseType: 'document',
                 maxRedirects: 0,
@@ -180,6 +183,9 @@ function getQualities(data, baseUrl) {
 }
 
 exports.pro = async (req, res, next) => {
+    if(!req.query.quality){
+        req.query.quality = getDefault('quality')
+    }
     try {
         if (channels[req.params.channel]) {
             let stream = await getPlaylist(req.params.channel);
