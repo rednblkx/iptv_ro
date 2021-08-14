@@ -397,7 +397,7 @@ async function login(cookies) {
   if(consoleL && cookies) console.log(`digi| login: ${cookies}`);
   return new Promise(async (resolve, reject) => {
     try {
-      const browser = await puppeteer.launch({headless: consoleL});
+      const browser = await puppeteer.launch({headless: consoleL, args: ['--no-sandbox', '--disable-setuid-sandbox']});
       const page = await browser.newPage();
       await page.goto('https://www.digionline.ro/auth/login');
       await page.evaluate((auth) => {
@@ -414,7 +414,6 @@ async function login(cookies) {
           aux = b.split("=");
           reusecookie[aux[0]] = aux[1]
         })
-        console.log(cookies.toString());
         await page.setCookie({name: "deviceId", value: reusecookie.deviceId, domain:".digionline.ro"})
       }    
       await page.waitForSelector("#form-login-mode-all");
