@@ -414,7 +414,8 @@ async function login(cookies) {
           aux = b.split("=");
           reusecookie[aux[0]] = aux[1]
         })
-        await page.setCookie({name: "deviceId", value: cookies.deviceId, domain:".digionline.ro"})
+        console.log(cookies.toString());
+        await page.setCookie({name: "deviceId", value: reusecookie.deviceId, domain:".digionline.ro"})
       }    
       await page.waitForSelector("#form-login-mode-all");
       var pupcookie = await page.cookies();
