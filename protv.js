@@ -49,6 +49,8 @@ async function login() {
         }
     });
 }
+
+exports.login = login;
 async function getLogin() {
     return new Promise(async (resolve, reject) => {
         try {

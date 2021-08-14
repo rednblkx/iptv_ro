@@ -629,3 +629,4 @@ async function login() {
     }
   });
 }
+exports.login = login;
