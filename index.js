@@ -1,10 +1,10 @@
 const express = require('express')
 const app = express()
 const port = 3000;
-const {streamDigi, digiEpg, flush: flushD} = require('./digionline');
-const {pro} = require('./protv');
+const {streamDigi, digiEpg, flush: flushD, login: loginD, login} = require('./digionline');
+const {pro, login: loginP} = require('./protv');
 const fs = require('fs')
-const {live, showid, shows, episode, flush: flushA, ems, emshtml, showshtml} = require('./antena');
+const {live, showid, shows, episode, flush: flushA, ems, emshtml, showshtml, login: loginA} = require('./antena');
 const path = require('path')
 app.get('/antena/flush', flushA)
 app.get('/digi/flush', flushD)
@@ -17,20 +17,50 @@ function getDefault(platform, scope){
   }
 app.post('/login',express.urlencoded({extended: false}), (req,res) => {
     var file;
+    // try {
+    //     file = fs.readFileSync('./auth.json').toString() && JSON.parse(fs.readFileSync('./auth.json').toString());
+    // } catch (error) {
+    //     fs.writeFileSync('./auth.json', `{"${req.body.provider}": {}}`);
+    //     file = JSON.parse(fs.readFileSync('./auth.json').toString())
+    // }
     try {
         file = fs.readFileSync('./auth.json').toString() && JSON.parse(fs.readFileSync('./auth.json').toString());
-    } catch (error) {
-        fs.writeFileSync('./auth.json', `{"${req.body.provider}": {}}`);
-        file = JSON.parse(fs.readFileSync('./auth.json').toString())
-    }
-    try {
-        file[req.body.provider] = {};
-        // res.setHeader("Content-Type", "application/json")
+        if(!file){
+            var auth = {};
+            auth[req.body.provider] = {};
+            fs.writeFileSync('./auth.json', JSON.stringify(auth));
+            file = auth[req.body.provider];
+        }
         if(['antena', 'pro', 'digi'].includes(req.body.provider)){
+            file[req.body.provider] = {}
             file[req.body.provider].username = req.body.username;
             file[req.body.provider].password = req.body.password;
             fs.writeFile("./auth.json", JSON.stringify(file), () => {
-                res.send('Success!')
+                switch(req.body.provider){
+                    case "antena":
+                        loginA().then(cookie => {
+                            res.send(`Success!\nReceived Cookies: ${cookie.toString()}`)
+                        }).catch(b => {
+                            throw b
+                        })
+                        break;
+                        
+                    case "pro":
+                        loginP().then(cookie => {
+                            res.send(`Success!\nReceived Cookies: ${cookie.cookie.toString()}`)
+                        }).catch(b => {
+                            throw b
+                        })
+                        break;
+                    
+                    case "digi":
+                        loginD().then(cookie => {
+                            res.send(`Success!\nReceived Cookies: ${cookie.toString()}`)
+                        }).catch(b => {
+                            throw b
+                        })
+                        break;
+                }
             })
         }else res.send('Invalid Provider ID!')
     } catch (error) {
