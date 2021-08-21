@@ -88,7 +88,9 @@ app.get('/ems',async (req,res) => {
     try {
         if(req.query.format && req.query.format === 'html'){
             res.send(await emshtml(req.query.page))
-        }else res.send(await ems(req.query.page));
+        }else {
+            res.setHeader("Content-Type", 'application/json').send(await ems(req.query.page));
+        }
     } catch (error) {
         res.status(505);
     }
