@@ -131,7 +131,10 @@ exports.showid = async (req, res) => {
   try {
     if(consoleL) console.log("antena| showid: Getting show episodes");
     if(consoleL) console.log(`antena| showid: params = ${JSON.stringify(req.params)}`);
-    req.query.year && req.query.month ? res.send(await getShow(req.params.show, req.query.format, req.query.year, req.query.month)) : res.send(await getShow(req.params.show, req.query.format));
+    if(consoleL) console.log(`antena| showid: queries = ${JSON.stringify(req.query)}`);
+    if(req.query.year && req.query.month) {
+      req.query.format == "json" ? res.setHeader('Content-Type', 'application/json').send(await getShow(req.params.show, req.query.format, req.query.year, req.query.month)) : res.send(await getShow(req.params.show, req.query.format, req.query.year, req.query.month))
+     } else req.query.format == "json" ? res.setHeader('Content-Type', 'application/json').send(await getShow(req.params.show, req.query.format)) : res.send(await getShow(req.params.show, req.query.format))
   } catch (error) {
     if(consoleL) console.error(error);
     res.status(500).send(error);
@@ -406,58 +409,70 @@ async function getShow(show, format, year, month) {
     if(consoleL) console.log("antena| getShow: loading into cheerio");
     let $ = cheerio.load(await html.data);
     if(format && format === 'html'){
-      let $$ = cheerio.load("<html><head><script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'/><title>Selector</title></head><body></body></html>");
-      $$('body').append("<h1>Month</h1>");
-      $$('body').append(`
-      <script>
-        $( document ).ready(function() {
-          $("#year").on("change", function() {
-            var t = $(this).find("option:selected"),
-            e = t.data("months").split(";");
-            $("#month option").each(function() {
-              $.inArray($(this).val(), e) >= 0 ? $(this).prop("disabled", !1) : $(this).prop("disabled", !0)
-            }), $("#month option:enabled").eq(0).prop("selected", !0)
-          })
-          var t = $("#year").find("option:selected"),
-                  e = t.data("months").split(";");
-              $("#month option").each(function() {
-                  $.inArray($(this).val(), e) >= 0 ? $(this).prop("disabled", !1) : $(this).prop("disabled", !0)
-              }), $("#month option:enabled").eq(0).prop("selected", !0)
-        });
-      </script>
-      `);
-      $$('body')
-        $$('body').append(`<select id="month" data-month="true">
-        <option selected="" disabled="" class="option">Luna</option> 
-        <option value="01" class="option" disabled="">Ianuarie</option>
-        <option value="02" class="option" disabled="">Februarie</option>
-        <option value="03" disabled="" class="option">Martie</option>
-        <option value="04" disabled="" class="option">Aprilie</option>
-        <option value="05" disabled="" class="option">Mai</option>
-        <option value="06" disabled="" class="option">Iunie</option>
-        <option value="07" disabled="" class="option">Iulie</option>
-        <option value="08" disabled="" class="option">August</option>
-        <option value="09" disabled="" class="option">Septembrie</option>
-        <option value="10" disabled="" class="option">Octombrie</option>
-        <option value="11" class="option">Noiembrie</option>
-        <option value="12" class="option">Decembrie</option>       
-      </select>`)
-      $$('body').append("<h1>Year</h1>")
-      $$("body").append(`<select id="year"></select>`);
-        if($("#js-selector-year option:not([disabled])").length > 0){
-          $("#js-selector-year option:not([disabled])").each((i, el) => {
-            $$("#year").append(`<option data-months=${$(el).attr('data-months')} value=${$(el).val()}>${$(el).text()}</option>`);
-          })
-        }else $$("#year").append(`<option selected data-months=${$("#js-selector-year option:not([disabled])").attr('data-months')} value=${$("#js-selector-year option:not([disabled])").val()}>${$("#js-selector-year option:not([disabled])").text()}</option>`)
-        $$($$('#month > option')[$$('#month > option').length - 1]).attr('selected',true);
-        $$($$('#year > option')[$$('#year > option').length - 1]).attr('selected',true);
-        $$('body').append(`
+      let $$ = cheerio.load('<html><head><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"/><title>Selector</title></head><body></body></html>');
+      if($("#js-selector-year option:not([disabled])").length > 0){
+        $$('body').append("<div id='selectors'></div>")
+        $$('#selectors').attr('style', 'margin-bottom: 2rem;')
+        $$('#selectors').append("<h1>Month</h1>");
+        $$('#selectors').append(`
         <script>
-          function select(){
-            window.location.href='?year=' + document.querySelector('#year').value + '&month=' + document.querySelector('#month').value
-          }
-        </script>`)
-        $$("body").append(`<button onclick="select()">Submit</button>`)
+          $( document ).ready(function() {
+            $("#year").on("change", function() {
+              var t = $(this).find("option:selected"),
+              e = t.data("months").split(";");
+              $("#month option").each(function() {
+                $.inArray($(this).val(), e) >= 0 ? $(this).prop("disabled", !1) : $(this).prop("disabled", !0)
+              }), $("#month option:enabled").eq(0).prop("selected", !0)
+            })
+            var t = $("#year").find("option:selected"),
+                    e = t.data("months").split(";");
+                $("#month option").each(function() {
+                    $.inArray($(this).val(), e) >= 0 ? $(this).prop("disabled", !1) : $(this).prop("disabled", !0)
+                }), $("#month option:enabled").eq(0).prop("selected", !0)
+          });
+        </script>
+        `);
+        $$('#selectors')
+          $$('#selectors').append(`<select id="month" data-month="true">
+          <option selected="" disabled="" class="option">Luna</option> 
+          <option value="01" class="option" disabled="">Ianuarie</option>
+          <option value="02" class="option" disabled="">Februarie</option>
+          <option value="03" disabled="" class="option">Martie</option>
+          <option value="04" disabled="" class="option">Aprilie</option>
+          <option value="05" disabled="" class="option">Mai</option>
+          <option value="06" disabled="" class="option">Iunie</option>
+          <option value="07" disabled="" class="option">Iulie</option>
+          <option value="08" disabled="" class="option">August</option>
+          <option value="09" disabled="" class="option">Septembrie</option>
+          <option value="10" disabled="" class="option">Octombrie</option>
+          <option value="11" class="option">Noiembrie</option>
+          <option value="12" class="option">Decembrie</option>       
+        </select>`)
+        $$('#selectors').append("<h1>Year</h1>")
+        $$("#selectors").append(`<select id="year"></select>`);
+          if($("#js-selector-year option:not([disabled])").length > 0){
+            $("#js-selector-year option:not([disabled])").each((i, el) => {
+              $$("#year").append(`<option data-months=${$(el).attr('data-months')} value=${$(el).val()}>${$(el).text()}</option>`);
+            })
+          }else $$("#year").append(`<option selected data-months=${$("#js-selector-year option:not([disabled])").attr('data-months')} value=${$("#js-selector-year option:not([disabled])").val()}>${$("#js-selector-year option:not([disabled])").text()}</option>`)
+          $$($$('#month > option')[$$('#month > option').length - 1]).attr('selected',true);
+          $$($$('#year > option')[$$('#year > option').length - 1]).attr('selected',true);
+          $$('#selectors').append(`
+          <script>
+            function select(){
+              window.location.href='?year=' + document.querySelector('#year').value + '&month=' + document.querySelector('#month').value
+            }
+          </script>`)
+          $$("#selectors").append(`<button onclick="select()">Submit</button>`)
+      }
+      $$('body').append($("#js-videos").html());
+      $$('body').prepend(`<a href="${'/show/play' + ($('.buton-vezi').attr('href')).trim()}" style="margin-bottom: 1rem;">Ultimul video</a>`)
+      $$("a").each((i, url) => {
+        $$(url).prepend($$($$(url).children('.container').children('img')).attr("width", "200px")) 
+        $$($$(url).children('.container')).each((i, el) => $(el).remove());
+        $$(url).attr("href", "/show/play" + $$(url).attr("href"));
+      });
+      $$('body').attr('style', 'display: flex;flex-direction: column;')
         !year || !month ? resolve($$.html()) : $ ? resolve(await fetchLinkShow(
           "https://antenaplay.ro" +
             $(".js-slider-button.slide-right").attr("data-url"), format, year, month
@@ -467,6 +482,7 @@ async function getShow(show, format, year, month) {
       if($("#js-selector-year option:not([disabled])").length > 0){
         $("#js-selector-year option:not([disabled])").each((i, el) => {
           $(el).attr('value') && (list[$(el).attr('value')] = ($(el).attr('data-months')).split(";"))
+          list['lastvideo'] = '/show/play' + ($('.buton-vezi').attr('href')).trim();
         })
       }else list[$("#js-selector-year option:not([disabled])").attr('value')] = ($("#js-selector-year option:not([disabled])").attr('data-months')).split(";")
       !year || !month ? resolve(JSON.stringify(list)) : $ ? resolve(await fetchLinkShow(
