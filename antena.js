@@ -101,7 +101,8 @@ exports.live = async (req, res, next) => {
         if(req.query.ts === 'true'){
           res.contentType("application/vnd.apple.mpegurl")
           let m3u8 = await axios.get(url)
-          let quality_url = setQuality(m3u8.data, req,query.quality)
+          let quality_url = setQuality(m3u8.data, req.query.quality)
+          if(consoleL && quality_url) console.log(`antena| live: selected quality URL "${quality_url}"`);
           let qu = await axios.get(quality_url)
           if(consoleL && quality_url) console.log(`antena| live: rewriting urls with quality "${req.query.quality}"`);
           res.send(m3uFixURL(qu.data, qu.config.url.match("(.*)/")[0]))
