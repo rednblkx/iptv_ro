@@ -27,6 +27,7 @@ Cookie.prototype.toString = function CookietoString() {
 function setQuality(data, quality) {
   let line;
   var m3u8;
+
   var m3u = data.split("\n").filter(function (str) {
     return str.length > 0;
   });
@@ -131,6 +132,7 @@ exports.showid = async (req, res) => {
     if(consoleL) console.log("antena| showid: Getting show episodes");
     if(consoleL) console.log(`antena| showid: params = ${JSON.stringify(req.params)}`);
     req.query.year && req.query.month ? res.send(await getShow(req.params.show, req.query.format, req.query.year, req.query.month)) : res.send(await getShow(req.params.show, req.query.format));
+
   } catch (error) {
     if(consoleL) console.error(error);
     res.status(500).send(error);
@@ -628,3 +630,4 @@ async function login() {
     }
   });
 }
+exports.login = login;
