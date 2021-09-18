@@ -83,7 +83,7 @@ exports.live = async (req, res, next) => {
           let m3u8 = await axios.get(stream[req.params.channel])
           let quality_url = setQuality(m3u8.data, req.query.quality)
           let qu = await axios.get(quality_url)
-          if(consoleL && quality_valid) console.log(`antena| live: trying quality "${req.query.quality}"`);
+          if(consoleL && quality_url) console.log(`antena| live: trying quality "${req.query.quality}"`);
           res.send(m3uFixURL(qu.data, qu.config.url.match("(.*)/")[0]))
         }else if(req.query.quality !== "auto"){
           let m3u8 = await axios.get(stream[req.params.channel])
