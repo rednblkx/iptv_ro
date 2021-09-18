@@ -1,7 +1,7 @@
 {
     "antena": {
         "res_format": "html",
-        "cache_url": "false",
+        "cache_url": "true",
         "cache_expire_ms": 2.16e+7,
         "rewrite_url": "false",
         "quality": "auto"
