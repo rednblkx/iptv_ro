@@ -206,7 +206,7 @@ exports.pro = async (req, res, next) => {
                 let quality = await axios.get(stream, {
                     headers: {
                         accept: "*/*",
-                        referer: "https://media.cms.protvplus.ro/",
+                        referer: "https://media.cms.protvplus.ro/"
                     },
                 });
                 if(consoleL && quality.data) console.log(`pro| pro: got channel's quality "${req.query.quality}" stream URL`);
