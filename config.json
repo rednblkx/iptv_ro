@@ -4,7 +4,7 @@
         "cache_url": "false",
         "cache_expire_ms": 2.16e+7,
         "rewrite_url": "false",
-        "quality": "hq"
+        "quality": "auto"
     },
     "pro": {
         "quality": "fullhd"
