@@ -407,7 +407,7 @@ async function getShow(show, format, year, month) {
     if(consoleL && html.data) console.log("antena| getShow: Got HTML");
     if(consoleL) console.log("antena| getShow: loading into cheerio");
     let $ = cheerio.load(await html.data);
-    if(format && format === html){
+    if(format && format === 'html'){
       let $$ = cheerio.load("<html><head><script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js'/><title>Selector</title></head><body></body></html>");
       $$('body').append("<h1>Month</h1>");
       $$('body').append(`
