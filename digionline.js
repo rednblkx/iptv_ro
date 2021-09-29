@@ -368,6 +368,111 @@ var channels = {
     drm: "y", 
     category: "filme"
   },
+  "cinethronix": {
+    id: 101,
+    drm: "n", 
+    category: "filme"
+  },
+  "mtv-eu": {
+    id: 104,
+    drm: "n", 
+    category: "filme"
+  },
+   "agro": {
+    id: 113,
+    drm: "n", 
+    category: "filme"
+  },
+   "alephnews": {
+    id: 114,
+    drm: "y", 
+    category: "filme"
+  },
+    "bucurestitv": {
+    id: 115,
+    drm: "n", 
+    category: "filme"
+  },
+    "dunatv": {
+    id: 116,
+    drm: "n", 
+    category: "filme"
+  },
+    "deutschewelle": {
+    id: 117,
+    drm: "n", 
+    category: "filme"
+  },
+     "etnotv": {
+    id: 118,
+    drm: "n", 
+    category: "filme"
+  },
+     "favorit": {
+    id: 119,
+    drm: "n", 
+    category: "filme"
+  },
+    "idatv": {
+    id: 120,
+    drm: "n", 
+    category: "filme"
+  },
+    "kapitaltv": {
+    id: 122,
+    drm: "n", 
+    category: "filme"
+  },
+    "looksportplus": {
+    id: 123,
+    drm: "n", 
+    category: "filme"
+  },
+    "magictv": {
+    id: 124,
+    drm: "n", 
+    category: "filme"
+  },
+    "mariatv": {
+    id: 125,
+    drm: "n", 
+    category: "filme"
+  },
+    "medika": {
+    id: 126,
+    drm: "n", 
+    category: "filme"
+  },
+    "ncntv": {
+    id: 127,
+    drm: "n", 
+    category: "filme"
+  },
+    "profitro": {
+    id: 128,
+    drm: "n", 
+    category: "filme"
+  },
+    "rocktv": {
+    id: 129,
+    drm: "n", 
+    category: "filme"
+  },
+    "taraftv": {
+    id: 130,
+    drm: "n", 
+    category: "filme"
+  },
+    "telestar1": {
+    id: 131,
+    drm: "n", 
+    category: "filme"
+  },
+    "trinitastv": {
+    id: 132,
+    drm: "n", 
+    category: "filme"
+  },
 };
 async function getLogin() {
   return new Promise(async (resolve, reject) => {
