@@ -119,7 +119,7 @@ var channels = {
   "cinethronix": {
     id: 101,
     drm: "n", 
-    category: "sport",
+    category: "tematice",
   },
 
   "film-cafe": {
@@ -302,7 +302,6 @@ var channels = {
     drm: "n", 
     category: "tematice",
   },
- 
   "bbc-earth": {
     id: 67,
     drm: "n", 
@@ -368,110 +367,100 @@ var channels = {
     drm: "y", 
     category: "filme"
   },
-  "cinethronix": {
-    id: 101,
-    drm: "n", 
-    category: "filme"
-  },
-  "mtv-eu": {
-    id: 104,
-    drm: "n", 
-    category: "filme"
-  },
    "agro": {
     id: 113,
     drm: "n", 
-    category: "filme"
+    category: "tematice"
   },
    "alephnews": {
     id: 114,
     drm: "y", 
-    category: "filme"
+    category: "stiri"
   },
-    "bucurestitv": {
+  "bucurestitv": {
     id: 115,
     drm: "n", 
-    category: "filme"
+    category: "stiri"
   },
-    "dunatv": {
+  "dunatv": {
     id: 116,
     drm: "n", 
-    category: "filme"
+    category: "extern"
   },
-    "deutschewelle": {
+  "deutschewelle": {
     id: 117,
     drm: "n", 
-    category: "filme"
+    category: "extern"
   },
-     "etnotv": {
+   "etnotv": {
     id: 118,
     drm: "n", 
-    category: "filme"
+    category: "muzica"
   },
-     "favorit": {
+   "favorit": {
     id: 119,
     drm: "n", 
-    category: "filme"
+    category: "muzica"
   },
-    "idatv": {
+  "idatv": {
     id: 120,
     drm: "n", 
-    category: "filme"
+    category: "tematice"
   },
-    "kapitaltv": {
+  "kapitaltv": {
     id: 122,
     drm: "n", 
-    category: "filme"
+    category: "tematice"
   },
-    "looksportplus": {
+  "looksportplus": {
     id: 123,
     drm: "n", 
-    category: "filme"
+    category: "sport"
   },
-    "magictv": {
+  "magictv": {
     id: 124,
     drm: "n", 
-    category: "filme"
+    category: "muzica"
   },
-    "mariatv": {
+  "mariatv": {
     id: 125,
     drm: "n", 
-    category: "filme"
+    category: "tematice"
   },
-    "medika": {
+  "medika": {
     id: 126,
     drm: "n", 
-    category: "filme"
+    category: "tematice"
   },
-    "ncntv": {
+  "ncntv": {
     id: 127,
     drm: "n", 
-    category: "filme"
+    category: "stiri"
   },
-    "profitro": {
+  "profitro": {
     id: 128,
     drm: "n", 
-    category: "filme"
+    category: "general"
   },
-    "rocktv": {
+  "rocktv": {
     id: 129,
     drm: "n", 
-    category: "filme"
+    category: "muzica"
   },
-    "taraftv": {
+  "taraftv": {
     id: 130,
     drm: "n", 
-    category: "filme"
+    category: "muzica"
   },
-    "telestar1": {
+  "telestar-1": {
     id: 131,
     drm: "n", 
-    category: "filme"
+    category: "extern"
   },
-    "trinitastv": {
+  "trinitastv": {
     id: 132,
     drm: "n", 
-    category: "filme"
+    category: "temeatice"
   },
 };
 async function getLogin() {
