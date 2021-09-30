@@ -508,21 +508,18 @@ function getDefault(scope){
   return conf[scope]
 }
 
-async function setCookies(cookies) {
-  return new Promise((resolve, reject) => {
-    try {
-        fs.readFile(__dirname + '/auth.json', (err, data) => {
-          if(consoleL) console.log("antena| setCookies: creating cookies object");
-          let auth = JSON.parse(data.toString());
-          auth.antena.cookies[auth.antena.cookies.findIndex(el => el.includes('XSRF-TOKEN'))] = cookies[cookies.findIndex(el => el.includes('XSRF-TOKEN'))];
-          auth.antena.cookies[auth.antena.cookies.findIndex(el => el.includes('laravel_session'))] = cookies[cookies.findIndex(el => el.includes('laravel_session'))];
-          fs.writeFile(__dirname + '/auth.json', JSON.stringify(auth), () => {if(consoleL) console.log("antena| setCookies: cookies successfully set");});
-          resolve('antena| setCookies: New Cookies!')
-        })
-      } catch (error) {
-        reject("antena| setCookies: " + error)
-    }
-  })
+function setCookies(cookies) {
+  try {
+      var data = fs.readFileSync(__dirname + '/auth.json').toString();
+      if(consoleL) console.log("antena| setCookies: creating cookies object");
+      let auth = JSON.parse(data);
+      auth.antena.cookies[auth.antena.cookies.findIndex(el => el.includes('XSRF-TOKEN'))] = cookies[cookies.findIndex(el => el.includes('XSRF-TOKEN'))];
+      auth.antena.cookies[auth.antena.cookies.findIndex(el => el.includes('laravel_session'))] = cookies[cookies.findIndex(el => el.includes('laravel_session'))];
+      fs.writeFile(__dirname + '/auth.json', JSON.stringify(auth), () => {if(consoleL) console.log("antena| setCookies: cookies successfully set");});
+      return 'antena| setCookies: New Cookies!'
+    } catch (error) {
+      console.log("antena| setCookies: " + error)
+  }
 }
 
 async function getStream(channel) {
@@ -542,7 +539,8 @@ async function getStream(channel) {
         mode: "cors",
       });
       if(consoleL && html.data) console.log("antena| getStream: got HTML");
-      setCookies(html.headers['set-cookie']);
+      let setC = setCookies(html.headers['set-cookie']);
+      if(consoleL) console.log(setC)
       let $ = cheerio.load(await html.data);
         $ ? resolve(
           $(".video-container script")
