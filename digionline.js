@@ -460,7 +460,7 @@ var channels = {
   "trinitastv": {
     id: 132,
     drm: "n", 
-    category: "temeatice"
+    category: "tematice"
   },
 };
 async function getLogin() {
