@@ -1,10 +1,10 @@
 const express = require('express')
 const app = express()
 const port = 3000;
-const {streamDigi, digiEpg, flush: flushD, login: loginD, login} = require('./digionline');
-const {pro, login: loginP} = require('./protv');
+const {streamDigi, digiEpg, flush: flushD, login: loginD, channels: chD} = require('./digionline');
+const {pro, login: loginP, channels: chP} = require('./protv');
 const fs = require('fs')
-const {live, showid, shows, episode, flush: flushA, ems, emshtml, showshtml, login: loginA} = require('./antena');
+const {live, showid, shows, episode, flush: flushA, ems, emshtml, showshtml, login: loginA, channels: chA} = require('./antena');
 const path = require('path')
 app.get('/antena/flush', flushA)
 app.get('/digi/flush', flushD)
@@ -97,11 +97,20 @@ app.get('/ems',async (req,res) => {
 });
 app.get('/show/play/:show/:epid', episode);
 app.get('/show/:show', showid);
+app.get('/antena/channels', (_, res) => {
+    res.send(chA)
+});
 //DiGiOnline
 app.get('/:channel/epg', digiEpg);
 app.get('/:channel.?(m3u8)?', streamDigi);
+app.get('/digi/channels', (_, res) => {
+    res.send(Object.keys(chD))
+});
 //ProPlus
 app.get('/:channel', pro);
+app.get('/pro/channels', (_, res) => {
+    res.send(Object.keys(chP))
+});
 
 app.listen(port, () => console.log(`IPTV-AIO is up and running on port ${port}`))
 
