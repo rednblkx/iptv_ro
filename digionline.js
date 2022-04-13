@@ -5,7 +5,7 @@ const http2 = require('http2');
 const cheerio = require('cheerio');
 const puppeteer = require('puppeteer');
 
-let consoleL = process.env.DEBUG;
+let consoleL = process.env.DEBUG || false;
 
 var ch = {};
 
@@ -491,7 +491,7 @@ async function login(cookies) {
   if(consoleL && cookies) console.log(`digi| login: ${cookies}`);
   return new Promise(async (resolve, reject) => {
     try {
-      const browser = await puppeteer.launch({headless: consoleL, args: ['--no-sandbox', '--disable-setuid-sandbox']});
+      const browser = await puppeteer.launch({headless: !consoleL, args: ['--no-sandbox', '--disable-setuid-sandbox']});
       const page = await browser.newPage();
       await page.goto('https://www.digionline.ro/auth/login');
       await page.evaluate((auth) => {
