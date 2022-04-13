@@ -463,6 +463,7 @@ var channels = {
     category: "tematice"
   },
 };
+exports.channels = channels;
 async function getLogin() {
   return new Promise(async (resolve, reject) => {
     try {

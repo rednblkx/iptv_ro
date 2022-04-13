@@ -15,6 +15,7 @@ var channels = [
   "antena-monden",
   "cookplay"
 ];
+exports.channels = channels;
 var stream = {};
 let consoleL = process.env.DEBUG;
 function Cookie(name, value) {

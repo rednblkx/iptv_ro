@@ -10,6 +10,7 @@ const channels = {
     "pro-gold": 4,
     "pro-cinema": 5
 };
+exports.channels = channels;
 var consoleL = process.env.DEBUG;
 function getDefault(scope){
     const conf = JSON.parse(fs.readFileSync('config.json')).pro

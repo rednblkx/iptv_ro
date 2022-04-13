@@ -14,7 +14,9 @@ THERE IS NO WARRANTY FOR THE SCRIPT, IT MIGHT NOT WORK AT ALL AND IT CAN BREAK A
 ### **APlay**
 
 ```
-/:channel(?ts=true&cached=true) --> Live feed of tv channel (see channels array at the beginning of antena.js)
+/:channel(?ts=true&cached=true) --> Live feed of :channel
+
+/antena/channels --> Get the available channel list
 
 /shows(?format=html) --> List of all the TV Series
 
@@ -42,7 +44,9 @@ Responses for "/ems" and "/shows" endpoints are by default JSON, use "format" qu
 
 ### **DiGi**
 ```
-/:channel(.m3u8)?ts=(0||1)&quality=(hq||mq||lq) --> Live feed of :channel ((see channels array at the beginning of digionline.js))
+/:channel(.m3u8)?ts=(0||1)&quality=(hq||mq||lq) --> Live feed of :channel
+
+/digi/channels --> Get the available channel list
 
 /:channel/epg --> EPG for :channel
 
@@ -91,7 +95,9 @@ https://xxxx.yyyy.zzz/stream.ts
 ```
 ### **ProPlus**
 ```
-/:channel(?quality=(hq,mq,lq)) --> Live feed of a tv channel (see channels array at the beginning of protv.js)
+/:channel(?quality=(hq,mq,lq)) --> Live feed of a tv channel
+
+/pro/channels --> Get the available channel list
 ```
 
 **Notes**
