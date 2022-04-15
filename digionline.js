@@ -474,7 +474,7 @@ async function getLogin() {
       if (auth.cookies) {
         if(consoleL) console.log("digi| getLogin: got cookies");
         resolve(auth.cookies);
-      } else if (!auth.cookies) {
+      } else if (auth && !auth.cookies) {
         if(consoleL) console.log("digi| getLogin: trying login");
         resolve(await login());
       }
@@ -572,10 +572,11 @@ async function getFromDigi(id, name, category) {
       // stream.data.stream_url ? callback(stream.data.stream_url) : callback(0);
       // });
     } catch (error) {
-        let auth = await getLogin();
-        login(auth).then(() => {
-            getFromDigi(id, name, category).then(stream => resolve(stream)).catch(er => reject(er))
-        }).catch(er => reject(er))
+        // let auth = await getLogin();
+        // login(auth).then(() => {
+        //     getFromDigi(id, name, category).then(stream => resolve(stream)).catch(er => reject(er))
+        // }).catch(er => reject(er))
+        reject(error);
       if(consoleL)
         console.error(error);
     }
@@ -663,9 +664,9 @@ exports.streamDigi = async (req, res, next) => {
   try {
     if (req.params.channel.match("(.*).m3u8"))
       req.params.channel = req.params.channel.match("(.*).m3u8")[1];
-
+      let dataAuth = await getLogin()
     if (channels[req.params.channel]) {
-      if(await getLogin()){
+      if(dataAuth){
         switch(req.query.ts){
           case "1":
             if(ch[req.params.channel]){
