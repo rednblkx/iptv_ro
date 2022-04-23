@@ -6,6 +6,7 @@
   "repository": "https://github.com/redmusicxd/iptv_ro",
   "dependencies": {
     "axios": "^0.26.0",
+    "blueimp-md5": "^2.19.0",
     "cheerio": "^1.0.0-rc.5",
     "express": "^4.17.1",
     "puppeteer": "^13.0.0"

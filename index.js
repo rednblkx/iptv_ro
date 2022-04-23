@@ -112,5 +112,5 @@ app.get('/pro/channels', (_, res) => {
     res.send(Object.keys(chP))
 });
 
-app.listen(port, () => console.log(`IPTV-AIO is up and running on port ${port}`))
+app.listen(port, () => console.log(`IPTV_RO is up and listening on port ${port}`))
 
