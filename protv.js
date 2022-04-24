@@ -164,11 +164,11 @@ function getQualities(data, baseUrl) {
 }
 
 exports.pro = async (req, res, next) => {
-    if(!req.query.quality){
-        req.query.quality = getDefault('quality')
-    }
     try {
         if (channels[req.params.channel]) {
+            if(!req.query.quality){
+                req.query.quality = getDefault('quality')
+            }
             let stream = await getPlaylist(req.params.channel);
             if(consoleL) console.log(`pro| pro: Getting channel stream URL`);
             if(consoleL) console.log(`pro| pro: ${stream}`);

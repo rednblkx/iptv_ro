@@ -61,20 +61,20 @@ function m3uFixURL(m3u, url) {
   return m3u.join("\n");
 }
 exports.live = async (req, res, next) => {
-  if (req.params.channel.match("(.*).m3u8"))
-    req.params.channel = req.params.channel.match("(.*).m3u8")[1];
-  if(!req.query.cached){
-    req.query.cached = getDefault('cache_url')
-  }
-  if(!req.query.ts){
-    req.query.ts = getDefault('rewrite_url')
-  }
-  if(!req.query.quality){
-    req.query.quality = getDefault('quality')
-  }
   var time;
   try {
     if (channels.includes(req.params.channel)) {
+      if (req.params.channel.match("(.*).m3u8"))
+        req.params.channel = req.params.channel.match("(.*).m3u8")[1];
+      if(!req.query.cached){
+        req.query.cached = getDefault('cache_url')
+      }
+      if(!req.query.ts){
+        req.query.ts = getDefault('rewrite_url')
+      }
+      if(!req.query.quality){
+        req.query.quality = getDefault('quality')
+      }
       if (stream[req.params.channel] != undefined && req.query.cached === 'true') {
         if(consoleL) console.log("antena| live: cached URL");
         if(consoleL) console.log(`antena| live: URL used: ${stream[req.params.channel]}`);
