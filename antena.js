@@ -616,9 +616,11 @@ async function login() {
       },
     });
     auth.antena.cookies = live.headers["set-cookie"].map((a) => a.match(/[^;]*/)[0])
-    fs.writeFileSync(__dirname + '/auth.json', JSON.stringify(auth));
     if (auth.antena.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))) {
-      if(consoleL) console.log("antena| login: cookies found ");
+        if(consoleL) console.log("antena| login: tokens found ");
+        fs.writeFile(__dirname + '/auth.json', JSON.stringify(auth), () => {
+          if(consoleL) console.log("antena| login: tokens saved ");
+        });
         resolve(auth.antena.cookies);
       } else {
         reject("antena| login: Username/Password incorrect");

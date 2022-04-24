@@ -499,7 +499,7 @@ function generateId(username, password, uhash){
   return {id: deviceId, hash: md5hash}
 }
 
-async function login(authTokens) {
+async function login() {
   let auth = JSON.parse(fs.readFileSync(__dirname + "/auth.json").toString());
   let pwdHash = md5(auth.digi.password)
   
@@ -530,7 +530,9 @@ async function login(authTokens) {
 
     if(register.data.meta?.error == 0){
       auth.digi.deviceId = id.id
-      fs.writeFileSync(__dirname + "/auth.json", JSON.stringify(auth))
+      fs.writeFile(__dirname + "/auth.json", JSON.stringify(auth), () => {
+        if(consoleL) console.log("digi| getFromDigi: saved authTokens");
+      })
       return Promise.resolve(id.id);
     } else throw "Authentication failed"
 
