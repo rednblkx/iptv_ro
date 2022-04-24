@@ -499,7 +499,7 @@ function generateId(username, password, uhash){
   return {id: deviceId, hash: md5hash}
 }
 
-async function login(cookies) {
+async function login(authTokens) {
   let auth = JSON.parse(fs.readFileSync(__dirname + "/auth.json").toString());
   let pwdHash = md5(auth.digi.password)
   
@@ -546,7 +546,7 @@ exports.login = login;
 async function getFromDigi(id, name, category) {
   return new Promise(async (resolve, reject) => {
     try {
-      if(consoleL) console.log("digi| getFromDigi: getting cookies");
+      if(consoleL) console.log("digi| getFromDigi: getting authTokens");
       let auth = await getLogin();
       if(consoleL && auth) console.log("digi| getFromDigi: got deviceId");
       if(consoleL) console.log("digi| getFromDigi: getting the stream");
@@ -766,7 +766,7 @@ exports.streamDigi = async (req, res, next) => {
               if(req.query.quality === 'get' && channels[req.params.channel].drm !== "y"){
                 let m3u8 = await axios.get(url.data?.stream.abr);
                 res.json({"qualities": getQualities(m3u8.data, url.data?.stream.abr.match("(.*)\/")[0])})
-              }else if(req.query.quality && req.query.quality !== "auto" && channels[req.params.channel].drm !== "y"){
+              }else if(req.query.quality && channels[req.params.channel].drm !== "y"){
                 let m3u8 = await axios.get(url.data?.stream.abr);
                 res.redirect(url.data?.stream.abr.match("(.*)/(.*).m3u8")[1] + "/" + m3uParse(m3u8.data, req.query.quality ? req.query.quality : "hq"));
               }else if(channels[req.params.channel].drm === "y") {
