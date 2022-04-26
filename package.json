@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": "https://github.com/redmusicxd/iptv_ro",
   "dependencies": {
-    "axios": "^0.26.0",
+    "axios": "^0.27.1",
     "blueimp-md5": "^2.19.0",
     "cheerio": "^1.0.0-rc.5",
     "express": "^4.17.1",
