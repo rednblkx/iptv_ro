@@ -15,53 +15,46 @@ function getDefault(platform, scope){
     const conf = JSON.parse(fs.readFileSync('config.json'))[platform]
     return conf[scope]
   }
-app.post('/login',express.urlencoded({extended: false}), (req,res) => {
+app.post('/login',express.json({extended: false}), (req,res) => {
     var file;
-    // try {
-    //     file = fs.readFileSync('./auth.json').toString() && JSON.parse(fs.readFileSync('./auth.json').toString());
-    // } catch (error) {
-    //     fs.writeFileSync('./auth.json', `{"${req.body.provider}": {}}`);
-    //     file = JSON.parse(fs.readFileSync('./auth.json').toString())
-    // }
     try {
-        file = fs.readFileSync('./auth.json').toString() && JSON.parse(fs.readFileSync('./auth.json').toString());
+        file = fs.existsSync('./auth.json') && JSON.parse(fs.readFileSync('./auth.json').toString());
         if(!file){
             var auth = {};
             auth[req.body.provider] = {};
-            fs.writeFileSync('./auth.json', JSON.stringify(auth));
+            fs.writeFileSync('./auth.json', JSON.stringify(auth, null, 2));
             file = auth[req.body.provider];
         }
         if(['antena', 'pro', 'digi'].includes(req.body.provider)){
-            file[req.body.provider] = {}
-            file[req.body.provider].username = req.body.username;
-            file[req.body.provider].password = req.body.password;
-            fs.writeFile("./auth.json", JSON.stringify(file), () => {
-                switch(req.body.provider){
-                    case "antena":
-                        loginA().then(cookie => {
-                            res.send(`Success!\nReceived Cookies: ${cookie.toString()}`)
-                        }).catch(b => {
-                            throw b
-                        })
-                        break;
-                        
-                    case "pro":
-                        loginP().then(cookie => {
-                            res.send(`Success!\nReceived Cookies: ${cookie.cookie.toString()}`)
-                        }).catch(b => {
-                            throw b
-                        })
-                        break;
+            !file[req.body.provider] && (file[req.body.provider] = {})
+            file[req.body.provider].username = file[req.body.provider].username || req.body.username;
+            file[req.body.provider].password = file[req.body.provider].password || req.body.password;
+            fs.writeFileSync("./auth.json", JSON.stringify(file, null, 2))
+            switch(req.body.provider){
+                case "antena":
+                    loginA().then(token => {
+                        res.send(`Success, token saved!\nReceived token: ${token.toString()}`)
+                    }).catch(b => {
+                        res.status(500).send(`${b}`)
+                    })
+                    break;
                     
-                    case "digi":
-                        loginD().then(cookie => {
-                            res.send(`Success!\nReceived Cookies: ${cookie.toString()}`)
-                        }).catch(b => {
-                            throw b
-                        })
-                        break;
-                }
-            })
+                case "pro":
+                    loginP().then(token => {
+                        res.send(`Success, token saved!\nReceived token: ${token}`)
+                    }).catch(b => {
+                        res.status(500).send(`${b}`)
+                    })
+                    break;
+                
+                case "digi":
+                    loginD().then(token => {
+                        res.send(`Success, token saved!\nReceived token: ${token}`)
+                    }).catch(b => {
+                        res.status(500).send(`${b}`)
+                    })
+                    break;
+            }
         }else res.send('Invalid Provider ID!')
     } catch (error) {
         res.status(500).send(`${error}`)

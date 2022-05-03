@@ -530,7 +530,7 @@ async function login() {
 
     if(register.data.meta?.error == 0){
       auth.digi.deviceId = id.id
-      fs.writeFile(__dirname + "/auth.json", JSON.stringify(auth), () => {
+      fs.writeFile(__dirname + "/auth.json", JSON.stringify(auth, null, 2), () => {
         if(consoleL) console.log("digi| getFromDigi: saved authTokens");
       })
       return Promise.resolve(id.id);

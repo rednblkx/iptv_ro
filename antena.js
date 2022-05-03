@@ -516,7 +516,7 @@ function setCookies(cookies) {
       let auth = JSON.parse(data);
       auth.antena.cookies[auth.antena.cookies.findIndex(el => el.includes('XSRF-TOKEN'))] = cookies[cookies.findIndex(el => el.includes('XSRF-TOKEN'))];
       auth.antena.cookies[auth.antena.cookies.findIndex(el => el.includes('laravel_session'))] = cookies[cookies.findIndex(el => el.includes('laravel_session'))];
-      fs.writeFile(__dirname + '/auth.json', JSON.stringify(auth), () => {if(consoleL) console.log("antena| setCookies: cookies successfully set");});
+      fs.writeFile(__dirname + '/auth.json', JSON.stringify(auth, null, 2), () => {if(consoleL) console.log("antena| setCookies: cookies successfully set");});
       return 'antena| setCookies: New Cookies!'
     } catch (error) {
       console.log("antena| setCookies: " + error)
@@ -618,7 +618,7 @@ async function login() {
     auth.antena.cookies = live.headers["set-cookie"].map((a) => a.match(/[^;]*/)[0])
     if (auth.antena.cookies.some((a) => a.match(/[^=]*/)[0].includes("device"))) {
         if(consoleL) console.log("antena| login: tokens found ");
-        fs.writeFile(__dirname + '/auth.json', JSON.stringify(auth), () => {
+        fs.writeFile(__dirname + '/auth.json', JSON.stringify(auth, null, 2), () => {
           if(consoleL) console.log("antena| login: tokens saved ");
         });
         resolve(auth.antena.cookies);
