@@ -42,10 +42,10 @@ async function login() {
                 if(consoleL) console.log("pro| login: got token");
                 if(consoleL) console.log(`pro| login: accessToken = ${step1.data?.credentials.accessToken}`);
                 auth.pro.token = step1.data?.credentials.accessToken
-                fs.writeFile(__dirname + "/auth.json", JSON.stringify(auth), () => {
+                fs.writeFile(__dirname + "/auth.json", JSON.stringify(auth, null, 2), () => {
                     if(consoleL) console.log("pro| login: saved token");
                 });
-                resolve({token: auth.pro.token});
+                resolve(auth.pro.token);
             } else reject("pro| login: Something wen wrong while signing in");
 
         } catch (error) {
