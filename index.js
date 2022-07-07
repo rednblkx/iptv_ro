@@ -5,7 +5,8 @@ const {streamDigi, digiEpg, flush: flushD, login: loginD, channels: chD} = requi
 const {pro, login: loginP, channels: chP} = require('./protv');
 const fs = require('fs')
 const {live, showid, shows, episode, flush: flushA, ems, emshtml, showshtml, login: loginA, channels: chA} = require('./antena');
-const path = require('path')
+const path = require('path');
+const { spawn } = require('child_process');
 app.get('/antena/flush', flushA)
 app.get('/digi/flush', flushD)
 app.get('/login', (req,res) => {
@@ -107,3 +108,7 @@ app.get('/pro/channels', (_, res) => {
 
 app.listen(port, () => console.log(`IPTV_RO is up and listening on port ${port}`))
 
+spawn(process.argv[0], ['cors.js'], {
+    // detached: true,               // this removes ties to the parent
+    stdio: [ 'ignore', process.stdout, process.stderr ]
+});
