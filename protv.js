@@ -24,18 +24,16 @@ async function login() {
             if(consoleL) console.log("pro| login: auth.json valid");
             if(consoleL) console.log("pro| login: now signing in");
             let step1 = await axios.post(
-                "https://apiprotvplus.cms.protvplus.ro/api/v2/auth-sessions",
-                `{"username":"${auth.pro.username}","password":"${auth.pro.password}"}`,
+                "https://protvplus.ro/login",
+                `email=${encodeURIComponent(auth.pro.username)}&password=${encodeURIComponent(auth.pro.password)}&login=Autentificare&_do=content11374-loginForm-form-submit`,
                 {
                 headers: {
-                    "X-DeviceType": "mobile",
-                    "X-DeviceOS": "Android",
-                    "User-Agent": "PRO TV PLUS/1.8.1 (com.protvromania; build:1648; Android 10; Model:Android SDK built for x86_64) okhttp/4.9.1",
-                    "X-Api-Key": "e09ea8e36e2726d04104d06216da2d3d9bc6c36d6aa200b6e14f68137c832a8369f268e89324fdc9",
-                    "Content-Type": "application/json"
+                    'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                    "Content-Type": "application/x-www-form-urlencoded",
                 },
+                responseType: 'document',
                 maxRedirects: 0,
-                validateStatus: (status) => status === 200
+                validateStatus: (status) => status === 302
               })
             if(consoleL && step1 && step1.data) console.log("pro| login: received response", step1.data);
             if (step1.data?.credentials) {
@@ -63,14 +61,14 @@ async function getLogin() {
             let auth = JSON.parse(fs.readFileSync(__dirname + "/auth.json").toString()).pro;
             if(consoleL && auth) console.log(`pro| getLogin: auth.json valid`);
             if(!auth || !auth.username || !auth.password || auth.username === "" || auth.password === "") throw "pro: No Credentials"
-            if (auth.token) {
+            if (auth.cookies) {
                 if(consoleL) console.log(`pro| getLogin: using existing tokens`);
-                resolve({token: auth.token});
-            } else if (!auth.token) {
+                resolve({cookies: auth.cookies});
+            } else if (!auth.cookies) {
                 if(consoleL) console.log(`pro| getLogin: trying getLogin`);
                 let token = await login();
                 if(consoleL && token) console.log(`pro| getLogin: got tokens`);
-                resolve({token: token.token});
+                resolve({cookies: token.cookies});
             }
         } catch (error) {
             reject("pro| getLogin: " + error);
@@ -83,23 +81,48 @@ async function getPlaylist(name) {
         try {
             if(consoleL) console.log(`pro| getPlaylist: getting tokens`);
             let auth = await getLogin();
-            if(consoleL && auth) console.log(`pro| getPlaylist: got tokens ${auth.token}`);
-            if(consoleL) console.log(`pro| getPlaylist: getting channel's stream URL`);
-            let stream = await axios.get(`https://apiprotvplus.cms.protvplus.ro/api/v2/content/channel-${channels[name]}/plays?acceptVideo=hls`,{
+            if(consoleL && auth) console.log(`pro| getPlaylist: got tokens ${auth.cookies}`);
+            if(consoleL) console.log(`pro| getPlaylist: getting channel's HTML`);
+            let step1 = await axios.get(`https://protvplus.ro/tv-live/${
+                channels[name]
+            }-${name}`, {
                 headers: {
-                    "X-DeviceType": "mobile",
-                    "X-DeviceOS": "Android",
-                    "User-Agent": "PRO TV PLUS/1.8.1 (com.protvromania; build:1648; Android 10; Model:Android SDK built for x86_64) okhttp/4.9.1",
-                    "X-Api-Key": "e09ea8e36e2726d04104d06216da2d3d9bc6c36d6aa200b6e14f68137c832a8369f268e89324fdc9",
-                    "Authorization": `Bearer ${auth.token}`
+                    accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                    "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+                    cookie: auth.cookies
                 }
-            })
-            if(consoleL && stream.data) console.log(`pro| getPlaylist: got channel's stream URL`);
+            });
+            if(consoleL && step1.data) console.log(`pro| getPlaylist: got first link`);
+            let $ = cheerio.load(step1.data);
+            if(consoleL && $) console.log(`pro| getPlaylist: ${$(".live-iframe-wrapper.js-user-box")[0].attribs["data-url"]}`);
+            if(consoleL) console.log(`pro| getPlaylist: getting channel's second link`);
+            let step2 = await axios.get($(".live-iframe-wrapper.js-user-box")[0].attribs["data-url"], {
+                headers: {
+                    accept: "*/*",
+                    "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+                    authorization: `Bearer undefined`,
+                    "x-requested-with": "XMLHttpRequest",
+                    cookie: auth.cookies,
+                    referrer: `https://protvplus.ro/tv-live/${
+                        channels[name]
+                    }-${name}`,
+                }
+            });
+            if(consoleL && step1.data) console.log(`pro| getPlaylist: got channel's second link`);
+            $ = cheerio.load(step2.data);
+            if(consoleL && $) console.log(`pro| getPlaylist: ${$("iframe").attr("src")}`);
+            if(consoleL) console.log(`pro| getPlaylist: getting channel's stream URL`);
+            let step3 = await axios.get($("iframe").attr("src"), {
+                headers: {
+                    cookie: auth.cookies,
+                    referer: "https://protvplus.ro/tv-live/1-pro-tv"
+                },
+            });
+            if(consoleL && step3.data) console.log(`pro| getPlaylist: got channel's stream`);
             // if(consoleL && step3.data) console.log(`pro| getPlaylist: ${step3.data}`);
-            if(consoleL && stream.data) console.log(`pro| getPlaylist: ${stream.data}`);
-            // if(consoleL && step3.data) console.log(`pro| getPlaylist: ${step3.data.match('{"HLS"(.*)}]}')}`);
-            // if(consoleL && step3.data) console.log(`pro| getPlaylist: ${JSON.parse(step3.data.match('{"HLS"(.*)}]}')[0]).HLS[0].src}`);
-            resolve(stream.data.url);
+            if(consoleL && step3.data) console.log(`pro| getPlaylist: ${step3.data.match(/{"HLS":\[\{(.*?)\}\]}/)}`);
+            if(consoleL && step3.data) console.log(`pro| getPlaylist: ${JSON.parse(step3.data.match(/{"HLS":\[\{(.*?)\}\]}/)[0]).HLS[0].src}`);
+            resolve(`http://localhost:8080/${JSON.parse(step3.data.match(/{"HLS":\[\{(.*?)\}\]}/)[0]).HLS[0].src}`);
         } catch (error) {
             reject("pro| getPlaylist: " + error);
             console.error(error);

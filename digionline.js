@@ -630,7 +630,7 @@ function getQualities(data, baseUrl) {
       if (
         line.includes(".m3u8")
       ) {
-          if(consoleL) console.log(`pro| getQualities: ${line}`);
+          if(consoleL) console.log(`digi| getQualities: ${line}`);
           lines.push(baseUrl + line);
       }
     }
