@@ -1,3 +1,6 @@
+> [!WARNING]  
+> Project no longer maintained and has been deprecated in favor of [iptvro_v2](https://github.com/rednblkx/iptvro_v2)
+
 ## Disclaimer
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fredmusicxd%2Fiptv_ro.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fredmusicxd%2Fiptv_ro?ref=badge_shield)
 
